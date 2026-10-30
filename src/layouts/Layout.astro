@@ -3,6 +3,7 @@ import '@fontsource/archivo-black';
 import '@fontsource-variable/archivo';
 import '../styles/global.css';
 import Icon from '../components/Icon.astro';
+import AlertaPopup from '../components/AlertaPopup.astro';
 import { SITE, NAV } from '../config';
 
 interface Props {
@@ -124,6 +125,8 @@ const path = Astro.url.pathname;
       </div>
       <p class="container-page pb-8 text-xs opacity-70">© {new Date().getFullYear()} {SITE.name}</p>
     </footer>
+
+    <AlertaPopup />
 
     <script>
       const root = document.documentElement;

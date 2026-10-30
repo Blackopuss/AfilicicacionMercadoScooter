@@ -110,7 +110,7 @@ describe('POST /api/publicar con admin y aal2', () => {
     const token = jwt({ aal: 'aal2' });
     const r = await pedir({ token });
     expect(r.status).toBe(200);
-    expect(await r.json()).toEqual({ ok: true, preciosCambiados: 3 });
+    expect(await r.json()).toEqual({ ok: true, preciosCambiados: 3, avisos: 0 });
     expect(getUser).toHaveBeenCalledWith(token);
     expect(llamadas).toContainEqual(['auditoria', 'insert', [{ usuario_id: 'u1', accion: 'publicar', precios_cambiados: 3 }]]);
     expect(hook).toHaveBeenCalledWith(ENV.CF_DEPLOY_HOOK_URL, { method: 'POST' });

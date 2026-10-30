@@ -1,0 +1,13 @@
+---
+// Destino genérico de /api/alertas/confirmar: el mismo mensaje sea válido o no el enlace.
+import Layout from '../../layouts/Layout.astro';
+---
+
+<Layout title="Alerta confirmada" noindex>
+  <section class="container-page pt-12 md:pt-16">
+    <p class="label">Alertas de precio</p>
+    <h1 class="slam mt-4 font-display text-[clamp(40px,9vw,104px)] leading-[0.9] tracking-[-0.04em] text-balance uppercase">Alerta confirmada</h1>
+    <p class="mt-6 max-w-[60ch] text-lg">Si el enlace era válido, tu alerta quedó activa. Te escribiremos solo cuando el precio baje.</p>
+    <a href="/" class="btn btn-ink mt-8">Volver al inicio</a>
+  </section>
+</Layout>
