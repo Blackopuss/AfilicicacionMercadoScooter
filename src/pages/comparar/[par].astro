@@ -1,0 +1,160 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import Icon from '../../components/Icon.astro';
+import Precio from '../../components/Precio.astro';
+import { getCatalogo, type ScooterCatalogo } from '../../lib/coleccion';
+import { autonomiaReal } from '../../lib/autonomia';
+import { ganadores } from '../../lib/comparar';
+import { ESPECIFICACIONES } from '../../lib/especificaciones';
+import { formatoPrecio } from '../../lib/formato';
+import { pares, razones, rutaVs } from '../../lib/versus';
+
+// Una página por par, con los slugs en orden alfabético: /comparar/b-vs-a no existe.
+export async function getStaticPaths() {
+  const catalogo = await getCatalogo();
+  return pares(catalogo).map(([a, b]) => ({ params: { par: `${a.slug}-vs-${b.slug}` }, props: { a, b } }));
+}
+
+interface Props {
+  a: ScooterCatalogo;
+  b: ScooterCatalogo;
+}
+const { a, b } = Astro.props;
+const nombre = (s: ScooterCatalogo) => `${s.marca} ${s.modelo}`;
+const [na, nb] = [nombre(a), nombre(b)];
+const [ra, rb] = [autonomiaReal(a), autonomiaReal(b)];
+const elige = razones(a, b);
+
+const difKm = Math.abs(ra - rb);
+const autonomia = difKm === 0 ? `Los dos llegan a ${ra} km reales.` : `${ra > rb ? na : nb} llega ${difKm} km más lejos (${Math.max(ra, rb)} contra ${Math.min(ra, rb)} km reales).`;
+const precio =
+  a.precioMxn === null || b.precioMxn === null
+    ? 'Precio pendiente: aún no tenemos precio verificado de los dos.'
+    : a.precioMxn === b.precioMxn
+      ? `Cuestan lo mismo: ${formatoPrecio(a.precioMxn)}.`
+      : `${a.precioMxn < b.precioMxn ? na : nb} cuesta ${formatoPrecio(Math.abs(a.precioMxn - b.precioMxn))} menos.`;
+
+const comparables = ESPECIFICACIONES.filter((e) => e.valor).length;
+const filas = ESPECIFICACIONES.map((e) => {
+  const [ganaA, ganaB] = e.valor ? ganadores([e.valor(a), e.valor(b)], e.menorEsMejor) : [false, false];
+  return { etiqueta: e.etiqueta, celdas: [{ texto: e.texto(a), gana: ganaA }, { texto: e.texto(b), gana: ganaB }] };
+});
+const victorias = [filas.filter((f) => f.celdas[0].gana).length, filas.filter((f) => f.celdas[1].gana).length];
+const titulo = `${na} vs ${nb}`;
+const h2 = 'font-display text-[clamp(32px,5vw,56px)] leading-[0.9] tracking-[-0.03em] uppercase';
+---
+
+<Layout
+  title={`${titulo}: cuál conviene`}
+  description={`${na} contra ${nb}: ${a.puntuacion}/100 contra ${b.puntuacion}/100, ${ra} contra ${rb} km de autonomía real. Quién gana en cada especificación y a quién le conviene cada uno.`}
+  migas={[{ nombre: 'Comparar', ruta: '/comparar' }, { nombre: titulo, ruta: rutaVs(a.slug, b.slug) }]}
+>
+  <article class="container-page pt-10">
+    <a href="/comparar" class="inline-flex min-h-11 items-center gap-2 font-semibold underline-offset-4 hover:underline">
+      <Icon name="arrow" class="size-4 rotate-180" />
+      Todos los scooters
+    </a>
+    <p class="label mt-6">Cara a cara</p>
+    <h1 class="slam mt-2 font-display text-[clamp(36px,6vw,80px)] leading-[0.9] tracking-[-0.04em] text-balance uppercase">
+      {a.modelo} <span class="text-accent-ink">vs</span> {b.modelo}
+    </h1>
+
+    <div class="mt-8 grid gap-6 sm:grid-cols-2">
+      {
+        [a, b].map((s, i) => (
+          <div class="card p-6">
+            <p class="label">{s.marca}</p>
+            <h2 class="mt-1 text-2xl font-bold">{s.modelo}</h2>
+            <p class="mt-3 font-display text-6xl leading-none tabular-nums">
+              {s.puntuacion}<span class="text-2xl text-muted">/100</span>
+            </p>
+            <p class="mt-2 text-muted">Gana en {victorias[i]} de {comparables} especificaciones medibles</p>
+            <p class="mt-4 tabular-nums"><span class="font-display text-3xl">{autonomiaReal(s)}</span> km de autonomía real</p>
+            <div class="mt-4"><Precio precio={s.precio} class="text-2xl" /></div>
+            <a href={`/scooter/${s.slug}`} class="btn btn-outline mt-5 w-full">
+              Ver ficha
+              <Icon name="arrow" class="size-4" />
+            </a>
+          </div>
+        ))
+      }
+    </div>
+
+    <section class="mt-16" aria-labelledby="diferencias-title">
+      <h2 id="diferencias-title" class={h2}>Diferencias clave</h2>
+      <ul class="card mt-6 grid gap-4 p-6 text-lg">
+        <li class="flex gap-3"><Icon name="battery" class="mt-1 size-5 shrink-0" />{autonomia}</li>
+        <li class="flex gap-3"><Icon name="chart" class="mt-1 size-5 shrink-0" />{precio}</li>
+      </ul>
+    </section>
+
+    <section class="mt-16" aria-labelledby="elige-title">
+      <h2 id="elige-title" class={h2}>¿Cuál te conviene?</h2>
+      <div class="mt-6 grid gap-6 md:grid-cols-2">
+        {
+          [
+            { s: a, lista: elige.a },
+            { s: b, lista: elige.b },
+          ].map(({ s, lista }) => (
+            <div class="card p-6">
+              <h3 class="text-xl font-bold">Elige {s.modelo} si…</h3>
+              {lista.length > 0 ? (
+                <ul class="mt-4 grid gap-3">
+                  {lista.map((r) => (
+                    <li class="flex gap-3">
+                      <Icon name="check" class="mt-1 size-5 shrink-0 text-accent-ink" />
+                      {r}
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p class="mt-4 text-muted">No supera al otro en ninguna especificación con dato.</p>
+              )}
+            </div>
+          ))
+        }
+      </div>
+    </section>
+
+    <section class="mt-16" aria-labelledby="specs-title">
+      <h2 id="specs-title" class={h2}>Especificación por especificación</h2>
+      <div class="card mt-6 overflow-x-auto" tabindex="0" role="region" aria-labelledby="specs-title">
+        <table class="w-full text-left">
+          <caption class="sr-only">{titulo}: especificaciones del fabricante. El ganador de cada fila va en negritas.</caption>
+          <thead class="border-b-2 border-line">
+            <tr>
+              <td class="p-4"></td>
+              <th scope="col" class="label p-4">{a.modelo}</th>
+              <th scope="col" class="label p-4">{b.modelo}</th>
+            </tr>
+          </thead>
+          <tbody>
+            {
+              filas.map((f) => (
+                <tr class="border-b-2 border-line last:border-b-0">
+                  <th scope="row" class="p-4 font-semibold">{f.etiqueta}</th>
+                  {f.celdas.map((c) => (
+                    <td class:list={['p-4 tabular-nums', c.gana && 'bg-surface-2 font-bold']}>
+                      {c.texto}
+                      {c.gana && <span class="sr-only"> (gana)</span>}
+                    </td>
+                  ))}
+                </tr>
+              ))
+            }
+          </tbody>
+        </table>
+      </div>
+      <p class="mt-3 text-sm text-muted">
+        Fichas oficiales:
+        <a href={a.fuenteSpecs} rel="noopener" target="_blank" class="font-semibold underline underline-offset-4">{na}</a>{' y '}
+        <a href={b.fuenteSpecs} rel="noopener" target="_blank" class="font-semibold underline underline-offset-4">{nb}</a>.{' '}
+        <a href="/como-puntuamos" class="font-semibold underline underline-offset-4">Cómo puntuamos</a>
+      </p>
+      <a href={`/comparar?m=${a.slug},${b.slug}`} class="btn btn-ink mt-8">
+        Abrir en el comparador
+        <Icon name="compare" class="size-4" />
+      </a>
+    </section>
+  </article>
+</Layout>

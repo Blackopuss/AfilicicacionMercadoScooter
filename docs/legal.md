@@ -8,7 +8,7 @@ Nota interna (no se publica en la web).
   respuesta ARCO (puse 20 + 15 días hábiles), autoridad garante y si hace falta aviso simplificado junto al formulario
   de alertas.
 - **Placeholders a llenar** en `src/pages/aviso-de-privacidad.astro`: `[NOMBRE DEL RESPONSABLE]`, `[DOMICILIO]`,
-  `[EMAIL DE CONTACTO]`. En `public/robots.txt`: `[DOMINIO]`.
+  `[EMAIL DE CONTACTO]`. El dominio va en la variable `SITE_URL` (canonical, sitemap y `robots.txt`).
 - **Mantenerlo al día.** Si entra un servicio nuevo que trate datos personales (otro encargado, cookies, analítica
   distinta), actualizar el aviso y su fecha (`updated`) antes de desplegarlo.
 - **Encargados**: confirmar la región de Supabase al crear el proyecto; el aviso dice que los servidores pueden estar

@@ -6,14 +6,36 @@ import Icon from '../components/Icon.astro';
 import AlertaPopup from '../components/AlertaPopup.astro';
 import { SITE, NAV } from '../config';
 
-interface Props {
+export type Miga = { nombre: string; ruta: string };
+
+export interface Props {
   title?: string;
   description?: string;
   noindex?: boolean;
+  /** Migas después de "Inicio". Por defecto, solo la página actual. */
+  migas?: Miga[];
+  /** Datos estructurados extra (schema.org), además del BreadcrumbList. */
+  jsonLd?: Record<string, unknown>[];
 }
-const { title, description = SITE.description, noindex = false } = Astro.props;
+const { title, description = SITE.description, noindex = false, migas, jsonLd = [] } = Astro.props;
 const pageTitle = title ? `${title} · ${SITE.name}` : `${SITE.name} · Compara scooters eléctricos en México`;
 const path = Astro.url.pathname;
+// Misma forma que las URLs del sitemap (build.format 'directory': con barra final).
+const absoluta = (ruta: string) => new URL(ruta.endsWith('/') ? ruta : `${ruta}/`, Astro.site).href;
+const canonical = absoluta(path);
+const ogImagen = new URL('/og.png', Astro.site).href;
+
+const todasLasMigas = [{ nombre: 'Inicio', ruta: '/' }, ...(migas ?? (path === '/' ? [] : [{ nombre: title ?? SITE.name, ruta: path }]))];
+const datos = [
+  {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: todasLasMigas.map((m, i) => ({ '@type': 'ListItem', position: i + 1, name: m.nombre, item: absoluta(m.ruta) })),
+  },
+  ...jsonLd,
+];
+// set:html con el JSON escapado: cada "<" va como escape unicode para que ningún texto cierre el <script>.
+const ld = (d: Record<string, unknown>) => JSON.stringify(d).replace(/</g, '\u003c');
 ---
 
 <!doctype html>
@@ -25,6 +47,19 @@ const path = Astro.url.pathname;
     <title>{pageTitle}</title>
     <meta name="description" content={description} />
     {noindex && <meta name="robots" content="noindex, nofollow" />}
+    {!noindex && path !== '/404' && <link rel="canonical" href={canonical} />}
+    <meta property="og:type" content="website" />
+    <meta property="og:locale" content="es_MX" />
+    <meta property="og:site_name" content={SITE.name} />
+    <meta property="og:title" content={pageTitle} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:image" content={ogImagen} />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="Compara scooters eléctricos en México: precio verificado y autonomía real" />
+    <meta name="twitter:card" content="summary_large_image" />
+    {datos.map((d) => <script type="application/ld+json" set:html={ld(d)} />)}
     <meta name="theme-color" content="#111111" media="(prefers-color-scheme: dark)" />
     <meta name="theme-color" content="#f2efe9" media="(prefers-color-scheme: light)" />
     <script is:inline>

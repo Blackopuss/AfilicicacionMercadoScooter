@@ -35,7 +35,7 @@ export function percentil(campo: CampoNumerico, scooter: Scooter, todos: Scooter
 }
 
 /** Nivel de protección contra agua: segundo dígito del código IP (IPX5 → 5). Sin dato → 0. */
-function nivelAgua(ip: string | null): number {
+export function nivelAgua(ip: string | null): number {
   return ip ? Number(ip[3]) : 0;
 }
 

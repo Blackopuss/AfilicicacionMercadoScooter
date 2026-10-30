@@ -1,18 +1,18 @@
 ---
 // Long-form text pages (legal, transparency): readable measure and Asfalto headings.
-import Layout from './Layout.astro';
+import Layout, { type Props as LayoutProps } from './Layout.astro';
 
-interface Props {
+interface Props extends Pick<LayoutProps, 'migas' | 'jsonLd'> {
   title: string;
   description: string;
   label: string;
   updated: string; // YYYY-MM-DD
 }
-const { title, description, label, updated } = Astro.props;
+const { title, description, label, updated, ...seo } = Astro.props;
 const updatedText = new Date(updated).toLocaleDateString('es-MX', { dateStyle: 'long', timeZone: 'UTC' });
 ---
 
-<Layout title={title} description={description}>
+<Layout title={title} description={description} {...seo}>
   <article class="container-page pt-12 md:pt-16">
     <p class="label">{label}</p>
     <h1 class="slam mt-4 font-display text-[clamp(40px,9vw,104px)] leading-[0.9] tracking-[-0.04em] text-balance uppercase">
