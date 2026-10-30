@@ -26,6 +26,8 @@ jobs:
       - run: npm ci
       - name: Type check
         run: npx astro check
+      - name: Unit tests (Vitest)
+        run: npm run test:unit
       - name: Build
         run: npm run build
       - name: Install Chromium

@@ -1,0 +1,28 @@
+{
+  "marca": "NAVEE",
+  "modelo": "V50i Pro",
+  "autonomiaFabricanteKm": 50,
+  "velocidadMaxKmh": 32,
+  "potenciaW": 350,
+  "potenciaPicoW": 700,
+  "bateriaWh": null,
+  "voltajeV": 36,
+  "pesoKg": 18.3,
+  "cargaMaxKg": 120,
+  "ruedaPulgadas": 10,
+  "tipoRueda": "neumatica",
+  "proteccionIP": "IPX5",
+  "plegable": true,
+  "suspension": "ninguna",
+  "frenos": "E-ABS delantero y disco trasero",
+  "pendienteMaxPct": 18,
+  "tiempoCargaH": 8,
+  "categorias": [
+    "urbano"
+  ],
+  "fuenteSpecs": "https://www.naveetech.com/navee-v50i-pro/",
+  "linkAfiliado": null,
+  "tipoVendedor": null,
+  "foto": null,
+  "activo": true
+}

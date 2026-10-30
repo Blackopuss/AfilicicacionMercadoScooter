@@ -1,0 +1,29 @@
+{
+  "marca": "Xiaomi",
+  "modelo": "Electric Scooter 5",
+  "autonomiaFabricanteKm": 60,
+  "velocidadMaxKmh": 25,
+  "potenciaW": 350,
+  "potenciaPicoW": 700,
+  "bateriaWh": 477,
+  "voltajeV": 48,
+  "pesoKg": 20.1,
+  "cargaMaxKg": 120,
+  "ruedaPulgadas": 10,
+  "tipoRueda": "tubeless",
+  "proteccionIP": "IPX5",
+  "plegable": true,
+  "suspension": "delantera",
+  "frenos": "Tambor delantero y E-ABS trasero",
+  "pendienteMaxPct": 18,
+  "tiempoCargaH": 9,
+  "categorias": [
+    "urbano",
+    "larga-autonomia"
+  ],
+  "fuenteSpecs": "https://www.mi.com/global/product/xiaomi-electric-scooter-5/specs/",
+  "linkAfiliado": null,
+  "tipoVendedor": null,
+  "foto": null,
+  "activo": true
+}
