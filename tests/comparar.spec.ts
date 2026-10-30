@@ -82,5 +82,5 @@ test('la ficha recalcula la autonomía real con tu peso y subidas', async ({ pag
   expect(conPeso).toBeLessThan(base);
   await page.getByLabel('Con subidas').check();
   expect(Number(await km.textContent())).toBeLessThan(conPeso);
-  await expect(page.locator('#historial')).toContainText('Historial de precios próximamente');
+  await expect(page.locator('#historial')).toContainText('Aún no hay historial de precios');
 });

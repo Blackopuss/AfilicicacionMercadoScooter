@@ -8,8 +8,9 @@ import { SITE, NAV } from '../config';
 interface Props {
   title?: string;
   description?: string;
+  noindex?: boolean;
 }
-const { title, description = SITE.description } = Astro.props;
+const { title, description = SITE.description, noindex = false } = Astro.props;
 const pageTitle = title ? `${title} · ${SITE.name}` : `${SITE.name} · Compara scooters eléctricos en México`;
 const path = Astro.url.pathname;
 ---
@@ -22,6 +23,7 @@ const path = Astro.url.pathname;
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <title>{pageTitle}</title>
     <meta name="description" content={description} />
+    {noindex && <meta name="robots" content="noindex, nofollow" />}
     <meta name="theme-color" content="#111111" media="(prefers-color-scheme: dark)" />
     <meta name="theme-color" content="#f2efe9" media="(prefers-color-scheme: light)" />
     <script is:inline>

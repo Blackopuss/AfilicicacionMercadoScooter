@@ -2,10 +2,12 @@
 import Layout from '../../layouts/Layout.astro';
 import Icon from '../../components/Icon.astro';
 import Precio from '../../components/Precio.astro';
+import HistorialPrecio from '../../components/HistorialPrecio.astro';
 import { getCatalogo, type ScooterCatalogo } from '../../lib/coleccion';
 import { autonomiaReal, PESO_REFERENCIA_KG } from '../../lib/autonomia';
 import { alternativasMasBaratas } from '../../lib/comparar';
 import { CLAVE, ESPECIFICACIONES, ETIQUETA_CATEGORIA } from '../../lib/especificaciones';
+import { getHistorial } from '../../lib/historial';
 import { percentil } from '../../lib/puntuacion';
 
 export async function getStaticPaths() {
@@ -199,7 +201,7 @@ const alternativas = alternativasMasBaratas(s, catalogo);
       <h2 id="historial-title" class="font-display text-[clamp(32px,5vw,56px)] leading-[0.9] tracking-[-0.03em] uppercase">
         Historial de precios
       </h2>
-      <p class="mt-4 text-muted">Historial de precios próximamente.</p>
+      <div class="mt-6"><HistorialPrecio puntos={await getHistorial(s.slug, 90)} /></div>
     </section>
   </article>
 </Layout>
