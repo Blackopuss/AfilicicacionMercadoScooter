@@ -59,7 +59,7 @@ Otras reglas:
 
 ## 5. Cabeceras de seguridad (A05)
 
-Archivo `public/_headers` de Cloudflare Pages, a crear con el primer despliegue:
+Archivo `public/_headers` de Cloudflare Pages (ya creado; esta es la plantilla):
 
 ```
 /*
@@ -74,6 +74,16 @@ Archivo `public/_headers` de Cloudflare Pages, a crear con el primer despliegue:
 ```
 
 El CSP se ajusta cuando entren el mapa (tiles), Brevo o Turnstile: añadir solo los dominios exactos.
+Cloudflare Web Analytics inyecta su propio script: al activarlo, añadir `https://static.cloudflareinsights.com`
+a `script-src` y `https://cloudflareinsights.com` a `connect-src`.
+
+**Hashes de scripts inline.** `script-src` permite cada `<script>` inline del HTML compilado por su hash.
+Hoy son dos: el de tema de `Layout.astro` (`is:inline`) y el `<script>` del menú y el botón de tema, que Astro
+mete inline en el HTML porque es pequeño. Cualquier cambio en uno de ellos (o en cómo Astro lo compila) cambia
+su hash y el navegador lo bloquearía en producción. `tests/csp.spec.ts` (parte de `npm run validate`) lo detecta:
+recorre `dist/`, calcula el SHA-256 de cada script inline y falla listando los hashes que faltan en
+`public/_headers`. Para recalcular: `npm run build`, `npx playwright test csp`, copiar los hashes que imprime
+a `script-src` y quitar los que ya no se usen.
 
 ## 6. Datos personales y emails (LFPDPPP)
 

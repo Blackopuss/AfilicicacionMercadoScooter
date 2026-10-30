@@ -1,0 +1,12 @@
+# Cloudflare Pages: cabeceras de seguridad (docs/seguridad.md, sección 5).
+# script-src lleva el hash de cada <script> inline del HTML compilado; tests/csp.spec.ts falla si no coinciden.
+# Al activar Supabase, añade a connect-src: https://<proyecto>.supabase.co
+/*
+  Content-Security-Policy: default-src 'self'; script-src 'self' 'sha256-b8H8Lsx+qs9xyzEoZdEP3mn4u0QtqVqeGR/gQgP1mBc=' 'sha256-3cQ2BlRm6F4erEW8bUJUbOKND+oWGDUe3xF+Gse/iMo='; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'
+  Strict-Transport-Security: max-age=63072000; includeSubDomains; preload
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+  Permissions-Policy: camera=(), microphone=(), geolocation=(self)
+/admin/*
+  X-Robots-Tag: noindex, nofollow
+  Cache-Control: no-store
