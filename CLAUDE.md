@@ -1,4 +1,5 @@
 @AGENTS.md
+@docs/seguridad.md
 
 # Reglas del proyecto (aplican en cada sesión)
 
@@ -56,9 +57,7 @@ design-system/         MASTER.md: fuente de verdad del diseño
 
 - Estático por defecto: los precios se hornean en el build; "Publicar" en `/admin` dispara un deploy hook. La web pública no consulta la base de datos.
 - La lógica de negocio va en `src/lib` como funciones puras; las páginas solo la llaman y pintan.
-- Secretos solo en variables de entorno (Cloudflare / Supabase). En el cliente, como mucho la anon key de Supabase. La service key solo en `functions/`.
-- Toda tabla de Supabase con RLS activado; escritura solo para el usuario admin.
-- Validar toda entrada en el servidor (formularios, alertas, funciones) y el doble opt-in en emails.
+- Seguridad: seguir `docs/seguridad.md` (cargado arriba) en todo lo que toque `/admin`, Supabase, `functions/`, formularios o emails.
 
 ## 4. Patrones de diseño ("Asfalto")
 
