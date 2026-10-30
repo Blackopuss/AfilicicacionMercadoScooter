@@ -1,0 +1,20 @@
+---
+import { formatoFecha, formatoPrecio } from '../lib/formato';
+import type { PrecioActual } from '../lib/precios';
+
+interface Props {
+  precio: PrecioActual | null;
+  class?: string;
+}
+const { precio, class: className = 'text-2xl' } = Astro.props;
+---
+
+<p class:list={['font-display tabular-nums', className]}>{formatoPrecio(precio?.precioMxn)}</p>
+{
+  precio && (
+    <p class="text-sm text-muted">
+      Verificado el <time datetime={precio.verificadoEn}>{formatoFecha(precio.verificadoEn)}</time>
+      {!precio.disponible && ' · sin existencias'}
+    </p>
+  )
+}

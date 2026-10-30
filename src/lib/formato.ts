@@ -9,9 +9,16 @@ export function formatoPrecio(mxn: number | null | undefined): string {
   return MXN.format(Math.round(mxn));
 }
 
-const FECHA = new Intl.DateTimeFormat('es-MX', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'America/Mexico_City' });
+const FECHA = new Intl.DateTimeFormat('es-MX', {
+  day: 'numeric',
+  month: 'short',
+  year: 'numeric',
+  timeZone: 'America/Mexico_City',
+});
 
-/** "29 oct 2026" en hora del centro de México (fecha de verificación de un precio). */
+/** "30 oct 2026" (hora de la Ciudad de México) a partir de una fecha ISO. */
 export function formatoFecha(iso: string): string {
-  return FECHA.format(new Date(iso));
+  const fecha = new Date(iso);
+  if (Number.isNaN(fecha.getTime())) throw new RangeError(`Fecha inválida: ${iso}`);
+  return FECHA.format(fecha);
 }
