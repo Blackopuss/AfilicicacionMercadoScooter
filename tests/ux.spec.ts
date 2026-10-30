@@ -2,7 +2,17 @@ import { test, expect } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 
 // Add every new page here so it gets the same UX/a11y checks.
-const PAGES = ['/', '/aviso-de-privacidad', '/como-ganamos-dinero', '/404', '/mapa', '/admin'];
+// One page per line so parallel branches merge cleanly (see .gitattributes).
+const PAGES = [
+  '/',
+  '/aviso-de-privacidad',
+  '/como-ganamos-dinero',
+  '/404',
+  '/admin',
+  '/quiz',
+  '/quiz?d=10&p=75&b=sin&s=0&c=1',
+  '/mapa',
+];
 const WIDTHS = [375, 768, 1280];
 const SCHEMES = ['light', 'dark'] as const;
 
