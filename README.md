@@ -42,11 +42,12 @@ Las dos ramas protegidas (`main` y `desarrollo`) solo aceptan Pull Requests con 
 
 Cuando una rama depende de otra, se fusiona primero la base en `desarrollo` y luego se actualiza la dependiente con `desarrollo`.
 
-## Validaciones automáticas (en cada PR y en `main`)
+## Validaciones automáticas (en cada PR a `desarrollo` o `main`)
 
 | Revisión | Herramienta |
 |---|---|
-| Tipos y build | `astro check`, `astro build` |
+| Tipos, pruebas unitarias y build | `astro check`, Vitest, `astro build` |
+| CSP permite todos los scripts inline | `npm run check:csp` |
 | UX y accesibilidad en 375 / 768 / 1280 px, modo claro y oscuro | Playwright + axe (WCAG 2.2 AA), sin scroll horizontal, tamaño de botones y links |
 | Accesibilidad ≥ 95, SEO ≥ 90, buenas prácticas ≥ 90 | Lighthouse CI |
 | Vulnerabilidades en dependencias | `npm audit` (high o superior) + Dependabot semanal |

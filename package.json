@@ -12,8 +12,9 @@
     "astro": "astro",
     "check": "astro check",
     "test:ux": "playwright test",
-    "validate": "astro check && vitest run --dir tests/unit && astro build && playwright test",
-    "test:unit": "vitest run --dir tests/unit"
+    "validate": "astro check && vitest run --dir tests/unit && astro build && node scripts/check-csp.mjs && playwright test",
+    "test:unit": "vitest run --dir tests/unit",
+    "check:csp": "node scripts/check-csp.mjs"
   },
   "dependencies": {
     "@astrojs/sitemap": "^3.7.4",

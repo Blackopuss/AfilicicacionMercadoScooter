@@ -4,6 +4,49 @@ Comparador de scooters eléctricos para todo México, con historial de precios, 
 A → B, quiz recomendador y guías. Monetiza con el Programa de Afiliados de Mercado Libre
 (10 % venta directa, 5 % indirecta en Deportes y Fitness, tabla vigente desde 02/02/2026).
 
+## Estado (30/10/2026)
+
+**Fases 1-8 terminadas y fusionadas en `desarrollo`**, con todas las revisiones del CI en verde. Validación integrada:
+0 errores de tipos, 111 pruebas unitarias, 351 pruebas de UX/accesibilidad y CSP correcto en 157 páginas.
+Falta que el dueño abra el PR `desarrollo` → `main`.
+
+| Función | PR | Notas |
+|---|---|---|
+| Base, diseño Asfalto, CI | #2 (a `main`) | |
+| Datos: 16 modelos, lógica, Supabase + RLS | #4 | specs solo de páginas oficiales; `linkAfiliado` y `foto` en `null` |
+| Legales, 404, robots, `_headers` (CSP) | #3 | aviso de privacidad con placeholders |
+| Panel `/admin` (OTP + MFA), Publicar, historial | #7 | |
+| Quiz | #6 | resultado enlazable por URL |
+| Mapa A → B + respaldo por km | #5 | proveedor Mapbox por confirmar |
+| Comparador, fichas, cómo puntuamos, top 3 en home | #8 | |
+| Alertas de precio y popup de salida | #10 | doble opt-in, Turnstile, Brevo |
+| Guías, A vs B, `/mejores`, sitemap, JSON-LD | #11 | |
+
+### Pendiente del dueño (no lo puede hacer Claude)
+
+1. **Revisar `desarrollo` y abrir el PR `desarrollo` → `main`.**
+2. **Cuentas y variables**:
+   - Cloudflare Pages: conectar el repo; rama de producción `main`, build `npm run build`, salida `dist`.
+   - Supabase: `docs/supabase.md`.
+   - Brevo + Turnstile: `docs/alertas.md`.
+   - Mapbox: `docs/mapa.md`.
+   - Dominio (Hostinger con nameservers en Cloudflare) y `SITE_URL`.
+
+   Todas las variables están en `.env.example`.
+3. **Datos de los 16 modelos** (`src/content/scooters/*.json`): `linkAfiliado` (del panel de afiliados de Mercado Libre), `tipoVendedor` y `foto` (de prensa del fabricante o propia).
+4. **Legal** (`docs/legal.md`): llenar los placeholders del aviso de privacidad y que lo revise un abogado antes de captar emails.
+5. **Decisiones**:
+   - Nombre de la marca: cambiar `SITE.name` en `src/config.ts` (hoy "Marca") y el favicon.
+   - Confirmar con Mapbox que su buscador y sus rutas se pueden usar sobre un mapa MapLibre en un sitio comercial; si no, cambiar el proveedor en `functions/_lib/rutas.ts`.
+   - Régimen fiscal con un contador.
+6. **Programa de afiliados**: declarar la web y las redes como Medios.
+
+### Siguiente trabajo técnico
+
+- QA final (fase 9): revisión visual completa en el navegador, Impeccable / `web-design-guidelines` si se instalan, Strix contra staging.
+- Alertas: si los filtros de correo corporativos confirman o dan de baja solos, pasar `confirmar` y `baja` a página con botón POST (`docs/alertas.md`).
+- Dependabot apunta a `desarrollo` desde este cambio. Los PR viejos hacia `main` (#1 TypeScript 7, #9 @types/node 26) se pueden cerrar: Dependabot los rehace contra `desarrollo`.
+
 ## Decisiones tomadas
 
 | Tema | Decisión |
@@ -56,8 +99,8 @@ precio real de hoy y su historial*.
 | Hosting y funciones | Cloudflare Pages + Pages Functions (para ocultar API keys) |
 | Base de datos y login del panel | Supabase (Postgres, login por enlace mágico solo a tu email, Row Level Security) |
 | Mapa | MapLibre + OpenFreeMap |
-| Rutas A → B | **Por decidir en la fase 6**: Mapbox Directions (100 000 rutas/mes gratis) u openrouteservice (2000/día, hay que confirmar si permiten uso comercial) |
-| Gráficas de precio | Una librería ligera (decidir con la skill dataviz) |
+| Rutas A → B | Mapbox Directions (perfil ciclismo) y Geocoding detrás de `functions/_lib/rutas.ts`; licencia por confirmar (`docs/mapa.md`). Sin token, `/mapa` usa el cálculo manual por km |
+| Gráficas de precio | SVG propio sin dependencias (`HistorialPrecio.astro`) |
 | Emails | Brevo (plan gratis) |
 | Analítica | Cloudflare Web Analytics (sin cookies) |
 
@@ -144,9 +187,7 @@ Unos $300 MXN al año (dominio). Todo lo demás en plan gratis.
 
 ## Pendiente
 
-- Nombre de marca (ver propuestas).
-- Proveedor de rutas (fase 6).
-- Régimen fiscal para cobrar comisiones: consultar con un contador.
+Ver "Estado" al inicio: pendientes del dueño y siguiente trabajo técnico.
 
 ## Propuestas de nombre
 

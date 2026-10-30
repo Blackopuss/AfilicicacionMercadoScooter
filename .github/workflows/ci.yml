@@ -30,6 +30,8 @@ jobs:
         run: npm run test:unit
       - name: Build
         run: npm run build
+      - name: CSP allows every inline script
+        run: npm run check:csp
       - name: Install Chromium
         run: npx playwright install --with-deps chromium
       - name: UX and accessibility tests (Playwright + axe)
