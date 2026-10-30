@@ -24,8 +24,9 @@ mismo precio. Primero se registra y luego se envía: si Brevo falla se pierde es
 El token rota en cada aviso (solo guardamos su hash, así que cada correo nuevo necesita uno nuevo): el enlace de
 baja que vale es el del último correo. El de la confirmación también sirve para darse de baja.
 
-Límites por correo (en el código): 20 alertas por correo como máximo y, si una alerta sin confirmar se vuelve a
-pedir, el correo de confirmación se reenvía como mucho una vez por hora. Una alerta ya confirmada no se toca.
+Límites por correo (en el código, contra el bombardeo de correos a un tercero): 20 alertas por correo y 3 sin
+confirmar como máximo; si una alerta sin confirmar se vuelve a pedir, la confirmación se reenvía como mucho una
+vez cada 24 h. Una alerta ya confirmada no se toca.
 
 ## Variables
 

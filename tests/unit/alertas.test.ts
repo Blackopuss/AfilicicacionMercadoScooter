@@ -178,6 +178,18 @@ describe('POST /api/alertas', () => {
     await post(valido);
     expect(enviados).toHaveLength(1);
   });
+
+  it('a un mismo correo le llegan como mucho 3 confirmaciones pendientes', async () => {
+    const slugs = ['modelo-a', 'modelo-b', 'modelo-c', 'modelo-d'];
+    const env = { ...ENV, ASSETS: { fetch: async () => Response.json(Object.fromEntries(slugs.map((s) => [s, s]))) } };
+    for (const slug of slugs) {
+      const request = new Request(`${ORIGEN}/api/alertas`, { method: 'POST', headers: { Origin: ORIGEN }, body: JSON.stringify({ ...valido, slug }) });
+      expect((await suscribir({ request, env, waitUntil: (p) => pendientes.push(p) })).status).toBe(202);
+    }
+    await Promise.all(pendientes);
+    expect(enviados).toHaveLength(3);
+    expect(estado.tablas.alertas).toHaveLength(3);
+  });
 });
 
 describe('confirmar y baja', () => {

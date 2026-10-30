@@ -16,8 +16,10 @@ const esquema = z.strictObject({
 });
 
 const MAX_BODY = 10_000;
+// Contra el bombardeo de correos a un tercero: pocas alertas sin confirmar y un reenvío al día como mucho.
 const MAX_ALERTAS_POR_EMAIL = 20;
-const REENVIO_MS = 60 * 60 * 1000; // una confirmación por hora como mucho a la misma alerta
+const MAX_PENDIENTES_POR_EMAIL = 3;
+const REENVIO_MS = 24 * 60 * 60 * 1000;
 const OK = { ok: true, mensaje: 'Si el correo es válido, te enviamos un enlace para confirmar la alerta.' };
 
 type Contexto = { request: Request; env: EnvAlertas; waitUntil: (p: Promise<unknown>) => void };
@@ -63,9 +65,9 @@ export async function onRequest({ request, env, waitUntil }: Contexto): Promise<
     const fila = { token_hash: hash, precio_objetivo: datos.precioObjetivo };
     let enviar = false;
     if (!existente.data) {
-      const { count, error } = await supabase.from('alertas').select('id', { count: 'exact', head: true }).eq('email', email);
+      const { data: suyas, error } = await supabase.from('alertas').select('confirmado').eq('email', email);
       if (error) throw error;
-      if ((count ?? 0) < MAX_ALERTAS_POR_EMAIL) {
+      if (suyas.length < MAX_ALERTAS_POR_EMAIL && suyas.filter((a) => !a.confirmado).length < MAX_PENDIENTES_POR_EMAIL) {
         const alta = await supabase.from('alertas').insert({ ...fila, email, scooter_slug: datos.slug });
         if (alta.error) throw alta.error;
         enviar = true;
