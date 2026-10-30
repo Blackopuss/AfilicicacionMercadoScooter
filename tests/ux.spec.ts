@@ -12,6 +12,10 @@ const PAGES = [
   '/quiz',
   '/quiz?d=10&p=75&b=sin&s=0&c=1',
   '/mapa',
+  '/comparar',
+  '/como-puntuamos',
+  '/scooter/xiaomi-electric-scooter-5',
+  '/scooter/segway-ninebot-max-g2',
 ];
 const WIDTHS = [375, 768, 1280];
 const SCHEMES = ['light', 'dark'] as const;

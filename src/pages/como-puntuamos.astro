@@ -1,0 +1,115 @@
+---
+import Layout from '../layouts/Layout.astro';
+import { getCatalogo } from '../lib/coleccion';
+import { autonomiaReal, FACTOR_SUBIDAS, FACTOR_URBANO, PESO_REFERENCIA_KG } from '../lib/autonomia';
+import { NOTA_RUEDA, NOTA_SUSPENSION, PESOS } from '../lib/puntuacion';
+
+const x100 = (n: number) => Math.round(n * 100);
+
+// Las cifras salen de src/lib: si cambian ahí, esta página cambia sola.
+const CRITERIOS: Record<keyof typeof PESOS, { nombre: string; como: string }> = {
+  autonomiaReal: { nombre: 'Autonomía real', como: `Kilómetros reales con ${PESO_REFERENCIA_KG} kg en ciudad, comparados con el resto del catálogo.` },
+  velocidad: { nombre: 'Velocidad máxima', como: 'Qué porcentaje de modelos supera.' },
+  potencia: { nombre: 'Potencia nominal', como: 'Qué porcentaje supera: sube pendientes y aguanta carga.' },
+  cargaMax: { nombre: 'Carga máxima', como: 'Qué porcentaje supera: si aguanta tu peso.' },
+  ligereza: { nombre: 'Ligereza', como: 'Qué porcentaje pesa más que este: más fácil de cargar por escaleras y en transporte.' },
+  suspension: {
+    nombre: 'Suspensión',
+    como: `Doble ${x100(NOTA_SUSPENSION.doble)} %, delantera ${x100(NOTA_SUSPENSION.delantera)} %, trasera ${x100(NOTA_SUSPENSION.trasera)} %, ninguna ${x100(NOTA_SUSPENSION.ninguna)} %.`,
+  },
+  rueda: {
+    nombre: 'Tipo de rueda',
+    como: `Tubeless ${x100(NOTA_RUEDA.tubeless)} %, neumática ${x100(NOTA_RUEDA.neumatica)} %, sólida ${x100(NOTA_RUEDA.solida)} %.`,
+  },
+  agua: { nombre: 'Protección al agua', como: 'El segundo dígito del código IP entre 8 (IPX5 = 5/8). Sin certificación cuenta 0.' },
+};
+const criterios = (Object.keys(PESOS) as (keyof typeof PESOS)[])
+  .map((k) => ({ ...CRITERIOS[k], peso: x100(PESOS[k]) }))
+  .sort((a, b) => b.peso - a.peso);
+
+const pct = (factor: number) => x100(1 - factor);
+const [ejemplo] = await getCatalogo();
+const pesoEjemplo = 95;
+const titulo = 'font-display text-[clamp(32px,5vw,56px)] leading-[0.9] tracking-[-0.03em] uppercase';
+---
+
+<Layout
+  title="Cómo puntuamos"
+  description="La fórmula de nuestra puntuación 0-100 y de la autonomía real de cada scooter eléctrico, con sus pesos y factores a la vista."
+>
+  <article class="container-page pt-10">
+    <p class="label">Transparencia</p>
+    <h1 class="slam mt-2 font-display text-[clamp(48px,9vw,120px)] leading-[0.88] tracking-[-0.04em] uppercase">
+      Cómo puntuamos
+    </h1>
+    <p class="mt-4 max-w-2xl text-lg text-pretty">
+      Una sola fórmula para todos los modelos, sin excepciones. La comisión de afiliado nunca cambia una puntuación ni un
+      orden.
+    </p>
+
+    <section class="mt-16" aria-labelledby="puntuacion-title">
+      <h2 id="puntuacion-title" class={titulo}>Puntuación 0-100</h2>
+      <p class="mt-4 max-w-2xl">
+        Cada criterio da una nota de 0 a 1. Los numéricos usan el percentil dentro del catálogo: la nota es el porcentaje
+        de modelos que este supera, y un dato que el fabricante no publica cuenta como 0. La puntuación es la suma de
+        cada nota por su peso, por 100.
+      </p>
+      <div class="card relative mt-6 overflow-x-auto" tabindex="0">
+        <table class="w-full min-w-[32rem] text-left">
+          <caption class="sr-only">Criterios y pesos de la puntuación</caption>
+          <thead class="border-b-2 border-line">
+            <tr>
+              <th scope="col" class="label p-4">Criterio</th>
+              <th scope="col" class="label p-4">Peso</th>
+              <th scope="col" class="label p-4">Cómo se calcula la nota</th>
+            </tr>
+          </thead>
+          <tbody>
+            {
+              criterios.map((c) => (
+                <tr class="border-b-2 border-line last:border-b-0">
+                  <th scope="row" class="p-4 font-semibold">{c.nombre}</th>
+                  <td class="p-4 font-display text-2xl tabular-nums">{c.peso} %</td>
+                  <td class="p-4 text-muted">{c.como}</td>
+                </tr>
+              ))
+            }
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="mt-16" aria-labelledby="autonomia-title">
+      <h2 id="autonomia-title" class={titulo}>Autonomía real</h2>
+      <p class="mt-4 max-w-2xl">
+        Los fabricantes miden en laboratorio: {PESO_REFERENCIA_KG} kg, en plano y a velocidad baja. Nosotros ajustamos
+        así:
+      </p>
+      <ol class="mt-6 grid gap-4 md:grid-cols-3">
+        <li class="card p-6">
+          <p class="font-display text-5xl tabular-nums">−{pct(FACTOR_URBANO)} %</p>
+          <p class="mt-2 font-bold">Ciudad</p>
+          <p class="mt-1 text-muted">Arrancar y frenar, ir a velocidad máxima y los baches.</p>
+        </li>
+        <li class="card p-6">
+          <p class="font-display text-5xl">Tu peso</p>
+          <p class="mt-2 font-bold">Masa total</p>
+          <p class="mt-1 text-muted">
+            Se multiplica por ({PESO_REFERENCIA_KG} kg + peso del scooter) ÷ (tu peso + peso del scooter).
+          </p>
+        </li>
+        <li class="card p-6">
+          <p class="font-display text-5xl tabular-nums">−{pct(FACTOR_SUBIDAS)} %</p>
+          <p class="mt-2 font-bold">Subidas</p>
+          <p class="mt-1 text-muted">Si tu ruta tiene subidas frecuentes.</p>
+        </li>
+      </ol>
+      <p class="mt-6 max-w-2xl">
+        El resultado se redondea y nunca supera la cifra del fabricante. Ejemplo: el
+        <a href={`/scooter/${ejemplo.slug}`} class="font-semibold underline underline-offset-4">{ejemplo.marca} {ejemplo.modelo}</a>
+        anuncia {ejemplo.autonomiaFabricanteKm} km; con {PESO_REFERENCIA_KG} kg calculamos {autonomiaReal(ejemplo)} km, y con
+        {pesoEjemplo} kg y subidas, {autonomiaReal(ejemplo, { pesoKg: pesoEjemplo, conSubidas: true })} km.
+      </p>
+    </section>
+  </article>
+</Layout>
