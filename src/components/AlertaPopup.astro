@@ -1,0 +1,95 @@
+---
+// Popup de salida con el formulario de alerta. <dialog> con showModal(): role dialog, aria-modal, foco atrapado,
+// Esc y foco devuelto al cerrar los da el navegador. Máximo una vez cada 7 días.
+import AlertaForm from './AlertaForm.astro';
+import Icon from './Icon.astro';
+
+const path = Astro.url.pathname;
+const slug = path.match(/^\/scooter\/([a-z0-9-]+)\/?$/)?.[1];
+const oculto = /^\/(admin|aviso-de-privacidad|alertas)(\/|$)/.test(path);
+---
+
+{
+  !oculto && (
+    <dialog
+      data-alerta-popup
+      aria-labelledby="alerta-popup-titulo"
+      class="m-auto max-h-[calc(100dvh-2rem)] w-[min(calc(100%-2rem),32rem)] overflow-y-auto border-2 border-line bg-bg p-0 text-fg shadow-[8px_8px_0_var(--border)] backdrop:bg-black/70"
+    >
+      <div class="p-6 sm:p-8">
+        <div class="flex items-start justify-between gap-4">
+          <h2 id="alerta-popup-titulo" class="font-display text-[clamp(32px,7vw,44px)] leading-[0.9] tracking-[-0.03em] uppercase">
+            Te avisamos cuando baje
+          </h2>
+          <button type="button" data-cerrar class="-mt-2 -mr-2 grid size-11 shrink-0 cursor-pointer place-items-center hover:bg-surface-2" aria-label="Cerrar">
+            <Icon name="x" class="size-6" />
+          </button>
+        </div>
+        <p class="mt-3 text-muted">Elige un modelo y te mandamos un correo cuando su precio baje. Te das de baja en un clic.</p>
+        <div class="mt-6">
+          <AlertaForm id="alerta-popup" slug={slug} />
+        </div>
+      </div>
+    </dialog>
+  )
+}
+
+<script>
+  const dialog = document.querySelector<HTMLDialogElement>('[data-alerta-popup]');
+  const CLAVE = 'alertaPopupVisto';
+  const SEMANA = 7 * 24 * 60 * 60 * 1000;
+
+  if (dialog) {
+    let visto: boolean;
+    try {
+      visto = Date.now() - Number(localStorage.getItem(CLAVE) ?? 0) < SEMANA;
+    } catch {
+      visto = true; // sin storage no se puede respetar el límite de 7 días: mejor no mostrarlo
+    }
+
+    const escritorio = matchMedia('(hover: hover) and (pointer: fine)').matches;
+    // Escritorio: el cursor sale por arriba de la ventana (hacia pestañas o barra de direcciones).
+    const salida = (e: MouseEvent) => {
+      if (!e.relatedTarget && e.clientY <= 0) abrir();
+    };
+    // Móvil: 60 % de la página recorrida o 45 s en ella.
+    const scroll = () => {
+      const recorrido = scrollY / (document.documentElement.scrollHeight - innerHeight);
+      if (recorrido >= 0.6) abrir();
+    };
+    const timer = escritorio || visto ? 0 : setTimeout(() => abrir(), 45_000);
+
+    function abrir() {
+      document.removeEventListener('mouseout', salida);
+      removeEventListener('scroll', scroll);
+      clearTimeout(timer);
+      if (visto || document.querySelector('dialog[open]')) return;
+      visto = true;
+      try {
+        localStorage.setItem(CLAVE, String(Date.now()));
+      } catch {}
+      dialog!.showModal();
+    }
+
+    if (!visto) {
+      if (escritorio) document.addEventListener('mouseout', salida);
+      else addEventListener('scroll', scroll, { passive: true });
+    }
+
+    // showModal() deja salir el foco a la barra del navegador; aquí se cierra el ciclo dentro del diálogo.
+    dialog.addEventListener('keydown', (e) => {
+      if (e.key !== 'Tab') return;
+      const focos = [...dialog.querySelectorAll<HTMLElement>('a[href], button:not([disabled]), input, select, iframe')];
+      const [primero, ultimo] = [focos[0], focos.at(-1)];
+      if (document.activeElement === (e.shiftKey ? primero : ultimo)) {
+        e.preventDefault();
+        (e.shiftKey ? ultimo : primero)?.focus();
+      }
+    });
+    dialog.querySelector('[data-cerrar]')?.addEventListener('click', () => dialog.close());
+    // Clic en el fondo: el <dialog> no tiene padding, así que solo el backdrop lo tiene como target.
+    dialog.addEventListener('click', (e) => {
+      if (e.target === dialog) dialog.close();
+    });
+  }
+</script>

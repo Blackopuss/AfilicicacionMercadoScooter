@@ -3,6 +3,7 @@ import Layout from '../../layouts/Layout.astro';
 import Icon from '../../components/Icon.astro';
 import Precio from '../../components/Precio.astro';
 import HistorialPrecio from '../../components/HistorialPrecio.astro';
+import AlertaForm from '../../components/AlertaForm.astro';
 import { getCatalogo, type ScooterCatalogo } from '../../lib/coleccion';
 import { autonomiaReal, PESO_REFERENCIA_KG } from '../../lib/autonomia';
 import { alternativasMasBaratas } from '../../lib/comparar';
@@ -254,6 +255,14 @@ const producto = {
         Historial de precios
       </h2>
       <div class="mt-6"><HistorialPrecio puntos={await getHistorial(s.slug, 90)} /></div>
+    </section>
+
+    <section id="alerta" class="mt-16" aria-labelledby="alerta-title">
+      <h2 id="alerta-title" class="font-display text-[clamp(32px,5vw,56px)] leading-[0.9] tracking-[-0.03em] uppercase">
+        Avísame si baja
+      </h2>
+      <p class="mt-3 max-w-[60ch] text-muted">Te mandamos un correo cuando el {nombre} baje de precio. Te das de baja en un clic.</p>
+      <div class="card mt-6 max-w-xl p-6"><AlertaForm id="alerta-ficha" slug={s.slug} /></div>
     </section>
   </article>
 </Layout>

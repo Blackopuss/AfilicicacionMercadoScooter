@@ -1,0 +1,128 @@
+---
+// Formulario de alerta de precio (popup de salida y ficha). Envía a POST /api/alertas; nunca enlaza a Mercado Libre.
+import Icon from './Icon.astro';
+import { getScooters } from '../lib/coleccion';
+import { PRECIO_MAX } from '../lib/precios';
+
+interface Props {
+  id: string; // prefijo de ids: puede haber dos formularios en la misma página
+  slug?: string; // modelo preseleccionado
+}
+const { id, slug } = Astro.props;
+const scooters = await getScooters();
+const siteKey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY;
+const campo = 'mt-2 block min-h-14 w-full border-2 border-line bg-surface px-4 text-lg';
+---
+
+<form data-alerta-form class="grid gap-4">
+  <div>
+    <label for={`${id}-email`} class="label">Tu correo</label>
+    <input id={`${id}-email`} name="email" type="email" autocomplete="email" maxlength="254" required class={campo} />
+  </div>
+  <div>
+    <label for={`${id}-modelo`} class="label">Modelo</label>
+    <select id={`${id}-modelo`} name="slug" required class={campo}>
+      {!slug && <option value="">Elige un modelo</option>}
+      {scooters.map((s) => <option value={s.slug} selected={s.slug === slug}>{s.marca} {s.modelo}</option>)}
+    </select>
+  </div>
+  <div>
+    <label for={`${id}-precio`} class="label">Avísame si baja a (pesos, opcional)</label>
+    <input
+      id={`${id}-precio`}
+      name="precioObjetivo"
+      type="number"
+      inputmode="numeric"
+      min="1"
+      max={PRECIO_MAX}
+      step="1"
+      aria-describedby={`${id}-precio-ayuda`}
+      class={campo}
+    />
+    <p id={`${id}-precio-ayuda`} class="mt-1 text-sm text-muted">Si lo dejas vacío, te avisamos cada vez que baje.</p>
+  </div>
+  <div class="flex items-start gap-3">
+    <input id={`${id}-consentimiento`} name="consentimiento" type="checkbox" required class="mt-0.5 size-6 shrink-0 accent-current" />
+    <p class="text-sm">
+      <label for={`${id}-consentimiento`}>Acepto recibir correos sobre esta alerta y que usen mi correo solo para eso.</label>
+      Lee el <a href="/aviso-de-privacidad" class="font-semibold underline underline-offset-4">aviso de privacidad</a>.
+    </p>
+  </div>
+  {siteKey && <div data-turnstile data-sitekey={siteKey} class="min-h-[65px]" />}
+  <button class="btn btn-accent w-full">
+    Crear alerta
+    <Icon name="bell" class="size-4" />
+  </button>
+  <p data-alerta-estado role="status" class="min-h-6 font-semibold" />
+</form>
+
+<script>
+  type Turnstile = {
+    render(el: HTMLElement, opciones: { sitekey: string; theme: string }): string;
+    getResponse(id: string): string | undefined;
+    reset(id: string): void;
+  };
+  const w = window as Window & { turnstile?: Turnstile };
+
+  // Turnstile se carga solo cuando un formulario se ve, no en cada página.
+  let carga: Promise<Turnstile> | undefined;
+  const cargarTurnstile = () =>
+    (carga ??= new Promise((ok, mal) => {
+      const s = document.createElement('script');
+      s.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit';
+      s.onload = () => (w.turnstile ? ok(w.turnstile) : mal(new Error('sin turnstile')));
+      s.onerror = mal;
+      document.head.append(s);
+    }));
+
+  for (const form of document.querySelectorAll<HTMLFormElement>('[data-alerta-form]')) {
+    const caja = form.querySelector<HTMLElement>('[data-turnstile]');
+    const estado = form.querySelector<HTMLElement>('[data-alerta-estado]')!;
+    const boton = form.querySelector<HTMLButtonElement>('button')!;
+    let widget: string | undefined;
+
+    if (caja) {
+      const visible = new IntersectionObserver(([e]) => {
+        if (!e.isIntersecting) return;
+        visible.disconnect();
+        cargarTurnstile()
+          .then((t) => (widget = t.render(caja, { sitekey: caja.dataset.sitekey!, theme: 'auto' })))
+          .catch(() => (estado.textContent = 'No se pudo cargar la verificación. Recarga la página.'));
+      });
+      visible.observe(form);
+    }
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const d = new FormData(form);
+      const precio = String(d.get('precioObjetivo') ?? '').trim();
+      boton.disabled = true;
+      estado.textContent = 'Enviando…';
+      try {
+        const r = await fetch('/api/alertas', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            email: String(d.get('email') ?? '').trim(),
+            slug: d.get('slug'),
+            precioObjetivo: precio ? Number(precio) : null,
+            consentimiento: d.get('consentimiento') === 'on',
+            turnstile: (widget && w.turnstile?.getResponse(widget)) || '',
+          }),
+        });
+        if (r.ok) {
+          form.reset();
+          estado.textContent = 'Listo: revisa tu correo y confirma la alerta. Si no llega, busca en spam.';
+        } else {
+          estado.textContent =
+            r.status === 403 ? 'No pudimos verificar que no eres un robot. Inténtalo otra vez.' : 'No se pudo crear la alerta. Inténtalo más tarde.';
+        }
+      } catch {
+        estado.textContent = 'Sin conexión. Inténtalo otra vez.';
+      } finally {
+        boton.disabled = false;
+        if (widget) w.turnstile?.reset(widget); // cada token sirve una sola vez
+      }
+    });
+  }
+</script>

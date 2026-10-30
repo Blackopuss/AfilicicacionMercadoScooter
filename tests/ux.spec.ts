@@ -19,6 +19,8 @@ const PAGES = [
   '/mejores/para-mas-de-100-kg',
   '/guias',
   '/guias/autonomia-real-vs-fabricante',
+  '/alertas/confirmada',
+  '/alertas/baja',
 ];
 const WIDTHS = [375, 768, 1280];
 const SCHEMES = ['light', 'dark'] as const;

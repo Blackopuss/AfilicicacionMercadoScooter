@@ -1,8 +1,10 @@
 import { createClient } from '@supabase/supabase-js';
+import { enviarAvisos, type EnvAlertas } from '../_lib/alertas';
 
 // POST /api/publicar: registra la publicación en auditoria y dispara el deploy hook de Cloudflare Pages.
+// Después avisa a las alertas de precio (functions/_lib/alertas.ts).
 // Comprobaciones en el orden de docs/seguridad.md §3. El body no se lee: este endpoint no recibe datos.
-export type Env = {
+export type Env = EnvAlertas & {
   PUBLIC_SUPABASE_URL?: string;
   SUPABASE_SERVICE_ROLE_KEY?: string; // secreto de Cloudflare
   CF_DEPLOY_HOOK_URL?: string; // secreto de Cloudflare
@@ -63,7 +65,15 @@ export async function onRequest({ request, env }: { request: Request; env: Env }
 
     const deploy = await fetch(hook, { method: 'POST' });
     if (!deploy.ok) throw new Error(`deploy hook respondió ${deploy.status}`);
-    return respuesta(200, { ok: true, preciosCambiados: count ?? 0 });
+
+    // Lo publicado ya quedó: un fallo de los avisos solo se registra.
+    let avisos = 0;
+    try {
+      avisos = await enviarAvisos(supabase, env, new URL(request.url).origin);
+    } catch (e) {
+      console.error('[publicar] avisos', e);
+    }
+    return respuesta(200, { ok: true, preciosCambiados: count ?? 0, avisos });
   } catch (e) {
     console.error('[publicar]', e);
     return fallo(500, 'No se pudo publicar');

@@ -3,6 +3,7 @@ import '@fontsource/archivo-black';
 import '@fontsource-variable/archivo';
 import '../styles/global.css';
 import Icon from '../components/Icon.astro';
+import AlertaPopup from '../components/AlertaPopup.astro';
 import { SITE, NAV } from '../config';
 
 export type Miga = { nombre: string; ruta: string };
@@ -159,6 +160,8 @@ const ld = (d: Record<string, unknown>) => JSON.stringify(d).replace(/</g, '\u00
       </div>
       <p class="container-page pb-8 text-xs opacity-70">© {new Date().getFullYear()} {SITE.name}</p>
     </footer>
+
+    <AlertaPopup />
 
     <script>
       const root = document.documentElement;
