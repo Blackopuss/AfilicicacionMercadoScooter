@@ -36,7 +36,6 @@ Falta que el dueño abra el PR `desarrollo` → `main`.
 3. **Datos de los 16 modelos** (`src/content/scooters/*.json`): `linkAfiliado` (del panel de afiliados de Mercado Libre), `tipoVendedor` y `foto` (de prensa del fabricante o propia).
 4. **Legal** (`docs/legal.md`): llenar los placeholders del aviso de privacidad y que lo revise un abogado antes de captar emails.
 5. **Decisiones**:
-   - Nombre de la marca: cambiar `SITE.name` en `src/config.ts` (hoy "Marca") y el favicon.
    - Confirmar con Mapbox que su buscador y sus rutas se pueden usar sobre un mapa MapLibre en un sitio comercial; si no, cambiar el proveedor en `functions/_lib/rutas.ts`.
    - Régimen fiscal con un contador.
 6. **Programa de afiliados**: declarar la web y las redes como Medios.
@@ -52,7 +51,7 @@ Falta que el dueño abra el PR `desarrollo` → `main`.
 | Tema | Decisión |
 |---|---|
 | Estilo | Modo oscuro y claro (sigue al sistema + interruptor). Estética de webs virales en TikTok: tipografía enorme, bento grid, animaciones al hacer scroll, que entre por los ojos |
-| Nombre | Corto e inventado (ver propuestas abajo) |
+| Nombre | **RSCOOT** (`SITE.name` en `src/config.ts`) |
 | Alcance | Todo México por igual |
 | Catálogo inicial | 15-20 modelos, solo productos nuevos de tiendas oficiales o reputación verde/amarilla |
 | v1 incluye | Comparador, ficha por modelo, historial de precios, mapa de autonomía A → B, quiz, guías/blog |
@@ -188,20 +187,3 @@ Unos $300 MXN al año (dominio). Todo lo demás en plan gratis.
 ## Pendiente
 
 Ver "Estado" al inicio: pendientes del dueño y siguiente trabajo técnico.
-
-## Propuestas de nombre
-
-`.com` sin registrar según el registro oficial (RDAP de Verisign) al 29/10/2026. Confírmalo en
-Hostinger al comprar, porque puede cambiar o ser un dominio "premium".
-
-| Nombre | Por qué |
-|---|---|
-| **Zumbik** | Suena al zumbido del motor eléctrico; corto, raro y fácil de recordar en un video |
-| **Ruedik** | "Rueda" con terminación tech; se entiende en español |
-| **Patinza** | De "patín"; suena a marca mexicana |
-| **Rutavolt** | Ruta + voltio; encaja con el mapa A → B |
-| **Ruedora** | Suave y fácil de decir |
-| Zumbika | Variante de Zumbik |
-| Scuterz | Muy directo, pero se lee raro en español |
-
-Se descartaron por estar ocupados: Rodda, Voltik, Scoova, Kilova, Voltica, Voltrix, Patix, Rodix y otros.
