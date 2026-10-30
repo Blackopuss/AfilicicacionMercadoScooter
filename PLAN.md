@@ -42,7 +42,8 @@ Falta que el dueño abra el PR `desarrollo` → `main`.
 
 ### Siguiente trabajo técnico
 
-- QA final (fase 9): revisión visual completa en el navegador, Impeccable / `web-design-guidelines` si se instalan, Strix contra staging.
+- QA final (fase 9): revisión visual hecha el 30/10/2026 (todas las páginas a 375 px y las principales a 1280 px, claro y oscuro). Falta Impeccable / `web-design-guidelines` si se instalan y Strix contra staging.
+  Ojo: Astro borra el salto de línea entre un texto y la etiqueta o `{variable}` que sigue ("Fuente:" + enlace sale "Fuente:enlace"); poner `{' '}` al final de la línea.
 - Alertas: si los filtros de correo corporativos confirman o dan de baja solos, pasar `confirmar` y `baja` a página con botón POST (`docs/alertas.md`).
 - Dependabot apunta a `desarrollo` desde este cambio. Los PR viejos hacia `main` (#1 TypeScript 7, #9 @types/node 26) se pueden cerrar: Dependabot los rehace contra `desarrollo`.
 
