@@ -69,7 +69,7 @@ const titulo = 'font-display text-[clamp(32px,5vw,56px)] leading-[0.9] tracking-
               criterios.map((c) => (
                 <tr class="border-b-2 border-line last:border-b-0">
                   <th scope="row" class="p-4 font-semibold">{c.nombre}</th>
-                  <td class="p-4 font-display text-2xl tabular-nums">{c.peso} %</td>
+                  <td class="p-4 font-display text-2xl whitespace-nowrap tabular-nums">{c.peso} %</td>
                   <td class="p-4 text-muted">{c.como}</td>
                 </tr>
               ))
@@ -105,9 +105,9 @@ const titulo = 'font-display text-[clamp(32px,5vw,56px)] leading-[0.9] tracking-
         </li>
       </ol>
       <p class="mt-6 max-w-2xl">
-        El resultado se redondea y nunca supera la cifra del fabricante. Ejemplo: el
-        <a href={`/scooter/${ejemplo.slug}`} class="font-semibold underline underline-offset-4">{ejemplo.marca} {ejemplo.modelo}</a>
-        anuncia {ejemplo.autonomiaFabricanteKm} km; con {PESO_REFERENCIA_KG} kg calculamos {autonomiaReal(ejemplo)} km, y con
+        El resultado se redondea y nunca supera la cifra del fabricante. Ejemplo: el{' '}
+        <a href={`/scooter/${ejemplo.slug}`} class="font-semibold underline underline-offset-4">{ejemplo.marca} {ejemplo.modelo}</a>{' '}
+        anuncia {ejemplo.autonomiaFabricanteKm} km; con {PESO_REFERENCIA_KG} kg calculamos {autonomiaReal(ejemplo)} km, y con{' '}
         {pesoEjemplo} kg y subidas, {autonomiaReal(ejemplo, { pesoKg: pesoEjemplo, conSubidas: true })} km.
       </p>
     </section>
