@@ -48,7 +48,7 @@ export function filtrarYOrdenar(filas: Fila[], f: Filtros, orden: Orden): string
   );
   const clave: Record<Orden, (s: (typeof pasan)[number]) => number> = {
     puntuacion: (s) => -s.puntuacion,
-    precio: (s) => s.precioMxn ?? Infinity, // sin precio al final
+    precio: (s) => s.precioMxn ?? Number.MAX_SAFE_INTEGER, // sin precio al final (Infinity - Infinity daría NaN)
     autonomia: (s) => -s.autonomia,
     peso: (s) => s.pesoKg,
   };
