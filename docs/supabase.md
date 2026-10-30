@@ -62,6 +62,18 @@ Después, en **Project Settings → Data API**, confirma que el único esquema e
 2. Registra tu app de autenticación (Google Authenticator, 1Password, etc.) cuando el panel `/admin` lo pida.
    Sin el segundo factor la sesión es `aal1` y las políticas rechazan cualquier escritura.
 
+## 5b. Inicio de sesión del panel `/admin`
+
+1. **Authentication → URL Configuration**: *Site URL* = `https://<tu-dominio>` y en *Redirect URLs* añade
+   `https://<tu-dominio>/admin/` (y la URL de *preview* de Cloudflare si vas a probar ahí).
+2. **Authentication → Emails → Magic Link**: añade el código a la plantilla para poder entrar desde el
+   celular aunque el correo se abra en otra app, por ejemplo `<p>Tu código: {{ .Token }}</p>`.
+3. Entra a `/admin`, pon tu correo y abre el enlace (en el mismo navegador) o escribe el código. La primera
+   vez el panel te pide dar de alta el TOTP con un QR; las siguientes, solo el código de 6 dígitos.
+4. Sin sesión `aal2` de admin el panel no muestra datos ni formularios. "Guardar" inserta una fila nueva en
+   `precios` (nunca la sobrescribe) y "Publicar" llama a `/api/publicar`, que comprueba origen, JWT,
+   `app_metadata.role = 'admin'` y `aal2`, deja registro en `auditoria` y dispara el deploy hook.
+
 ## 6. Variables en Cloudflare Pages
 
 **Workers & Pages → tu proyecto → Settings → Variables and secrets**, en *Production* y *Preview*:
@@ -71,8 +83,15 @@ Después, en **Project Settings → Data API**, confirma que el único esquema e
 | `PUBLIC_SUPABASE_URL` | Project Settings → API → Project URL | Texto (es pública) |
 | `PUBLIC_SUPABASE_ANON_KEY` | Project Settings → API Keys → `anon` (o la *publishable key*) | Texto (es pública) |
 
-En local, copia `.env.example` a `.env` y rellénalo. La `service_role` key **nunca** lleva prefijo
-`PUBLIC_` ni entra al repo: solo se usará como *secret* de Cloudflare cuando lleguen `functions/`.
+Y como **secretos** (tipo *Secret*, botón *Encrypt*), solo para `functions/api/publicar.ts`:
+
+| Secreto | Dónde se saca |
+|---|---|
+| `SUPABASE_SERVICE_ROLE_KEY` | Project Settings → API Keys → `service_role` (o la *secret key*) |
+| `CF_DEPLOY_HOOK_URL` | Cloudflare → tu proyecto → Settings → Builds → **Deploy hooks** → crea uno para la rama de producción |
+
+En local, copia `.env.example` a `.env` y rellénalo. La `service_role` key y el deploy hook **nunca**
+llevan prefijo `PUBLIC_` ni entran al repo (para `wrangler pages dev` van en `.dev.vars`, ignorado por git).
 
 ## 7. Comprobar la seguridad
 
@@ -87,3 +106,9 @@ En local, copia `.env.example` a `.env` y rellénalo. La `service_role` key **nu
 
   Comprueban que anon no escribe ni lee alertas, que un usuario sin rol admin (o con un rol falso en
   `user_metadata`) no escribe, que un admin sin MFA no escribe y que la auditoría no se puede borrar.
+
+## 8. Al activar Supabase en producción
+
+- `public/_headers`: añade `https://<proyecto>.supabase.co` a `connect-src` o el panel no podrá hablar con Supabase.
+- Cloudflare → **Security → WAF → Rate limiting rules** (plan Free, 1 regla): limita `/api/*`, por ejemplo
+  a 10 peticiones por minuto por IP.

@@ -1,0 +1,256 @@
+---
+// Panel de /admin: solo se renderiza con Supabase configurado, así su script no existe en un build sin variables.
+import Icon from './Icon.astro';
+import type { Scooter } from '../lib/scooter';
+
+interface Props {
+  scooters: Scooter[];
+}
+const { scooters } = Astro.props;
+const campo = 'mt-2 block min-h-14 w-full border-2 border-line bg-surface px-4 text-xl';
+---
+
+<div id="admin" class="mt-8">
+  <p id="admin-estado" role="status" class="mb-4 min-h-6 font-semibold" />
+
+  <p data-vista="cargando">Cargando…</p>
+
+  <form data-vista="email" hidden class="card max-w-md p-6">
+    <label for="admin-email" class="label">Tu correo</label>
+    <input id="admin-email" name="email" type="email" autocomplete="email" required class={campo} />
+    <button class="btn btn-ink mt-4 w-full">Enviar enlace y código</button>
+  </form>
+
+  <form data-vista="codigo" hidden class="card max-w-md p-6">
+    <p>Abre el enlace del correo en este navegador o escribe el código que viene en él.</p>
+    <label for="admin-codigo" class="label mt-4 block">Código del correo</label>
+    <input id="admin-codigo" name="codigo" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6,10}" required class={campo} />
+    <button class="btn btn-ink mt-4 w-full">Entrar</button>
+  </form>
+
+  <form data-vista="mfa" hidden class="card max-w-md p-6">
+    <div data-alta hidden>
+      <p>Activa el segundo factor: escanea el código con tu app de autenticación (o escribe la clave) y confirma con el código que te muestre.</p>
+      <img data-qr alt="Código QR para tu app de autenticación" width="200" height="200" class="mt-4 bg-white p-2" />
+      <p class="mt-2 text-sm break-all">Clave: <code data-secreto /></p>
+    </div>
+    <label for="admin-totp" class="label mt-4 block">Código de tu app de autenticación</label>
+    <input id="admin-totp" name="totp" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6}" required class={campo} />
+    <button class="btn btn-ink mt-4 w-full">Verificar</button>
+  </form>
+
+  <p data-vista="sin-permiso" hidden class="card max-w-md p-6">Tu cuenta no tiene permiso para capturar precios.</p>
+
+  <div data-vista="panel" hidden />
+
+  <button type="button" data-salir hidden class="btn btn-outline mt-6">Cerrar sesión</button>
+
+  {/* Solo se clona al DOM con sesión aal2 de admin. */}
+  <template id="tpl-panel">
+    <div class="flex flex-wrap gap-3">
+      <button type="button" data-publicar class="btn btn-accent">
+        Publicar
+        <Icon name="arrow" class="size-4" />
+      </button>
+    </div>
+    <p class="mt-2 text-sm text-muted">Guarda los precios del día y al final publica: el sitio se reconstruye en unos minutos.</p>
+    <ul class="mt-6 grid gap-4 md:grid-cols-2">
+      {scooters.map((s) => (
+        <li class="card p-5" data-slug={s.slug}>
+          <p class="label">{s.marca}</p>
+          <h2 class="mt-1 font-display text-2xl leading-[0.95] uppercase">{s.modelo}</h2>
+          <p class="mt-2 text-sm text-muted">
+            Último: <span data-ultimo>sin precio</span>
+          </p>
+          {s.linkAfiliado ? (
+            <a href={s.linkAfiliado} target="_blank" rel="sponsored nofollow noopener" class="btn btn-outline mt-4 w-full">
+              Abrir en Mercado Libre
+            </a>
+          ) : (
+            <p class="mt-4 text-sm text-muted">Sin link de afiliado.</p>
+          )}
+          <form class="mt-4" data-slug={s.slug}>
+            <label for={`precio-${s.slug}`} class="label">Precio de hoy (pesos)</label>
+            <input
+              id={`precio-${s.slug}`}
+              name="precio"
+              type="number"
+              inputmode="numeric"
+              min="1"
+              max="200000"
+              step="1"
+              required
+              class={`${campo} text-3xl font-bold`}
+            />
+            <label class="mt-3 flex min-h-11 cursor-pointer items-center gap-3 font-semibold">
+              <input name="disponible" type="checkbox" checked class="size-6 accent-current" />
+              Disponible
+            </label>
+            <button class="btn btn-ink mt-3 w-full">Guardar</button>
+            <p data-estado role="status" class="mt-2 min-h-6 text-sm font-semibold" />
+          </form>
+        </li>
+      ))}
+    </ul>
+  </template>
+</div>
+
+<script>
+  import { createClient, type SupabaseClient } from '@supabase/supabase-js';
+  import { formatoFecha, formatoPrecio } from '../lib/formato';
+  import { esPrecioValido } from '../lib/precios';
+
+  type Fila = { scooter_slug?: string; precio_mxn: number; disponible: boolean; verificado_en: string };
+
+  const raiz = document.getElementById('admin');
+  const url = import.meta.env.PUBLIC_SUPABASE_URL;
+  const key = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
+  if (raiz && url && key) iniciar(raiz, createClient(url, key, { auth: { flowType: 'pkce' } }));
+
+  function iniciar(raiz: HTMLElement, sb: SupabaseClient) {
+    const $ = <T extends Element>(sel: string, el: ParentNode = raiz) => el.querySelector<T>(sel)!;
+    const estado = $<HTMLElement>('#admin-estado');
+    const panel = $<HTMLElement>('[data-vista="panel"]');
+    const salir = $<HTMLButtonElement>('[data-salir]');
+    const avisar = (texto: string) => (estado.textContent = texto);
+    let email = '';
+    let factorId = '';
+
+    function mostrar(vista: string) {
+      for (const el of raiz.querySelectorAll<HTMLElement>('[data-vista]')) el.hidden = el.dataset.vista !== vista;
+      salir.hidden = ['cargando', 'email', 'codigo'].includes(vista);
+      raiz.querySelector<HTMLInputElement>(`[data-vista="${vista}"] input`)?.focus();
+    }
+
+    // Decide qué ver según la sesión: sin sesión → correo; aal1 → MFA; aal2 de admin → panel.
+    async function evaluar() {
+      const {
+        data: { session },
+      } = await sb.auth.getSession();
+      if (!session) return mostrar('email');
+      const { data: aal, error } = await sb.auth.mfa.getAuthenticatorAssuranceLevel();
+      if (error) return avisar('No se pudo comprobar la sesión. Recarga la página.');
+      if (aal.currentLevel !== 'aal2') return aal.nextLevel === 'aal2' ? pedirMfa() : altaMfa();
+      // Solo es aviso de interfaz: quien decide es RLS (app_metadata.role + aal2).
+      if (session.user.app_metadata?.role !== 'admin') return mostrar('sin-permiso');
+      abrirPanel();
+    }
+
+    async function pedirMfa() {
+      const { data } = await sb.auth.mfa.listFactors();
+      factorId = data?.totp[0]?.id ?? '';
+      $<HTMLElement>('[data-alta]').hidden = true;
+      mostrar('mfa');
+    }
+
+    async function altaMfa() {
+      // Un alta a medias deja un factor sin verificar que bloquea el siguiente intento.
+      const { data: factores } = await sb.auth.mfa.listFactors();
+      for (const f of factores?.all ?? []) {
+        if (f.factor_type === 'totp' && f.status === 'unverified') await sb.auth.mfa.unenroll({ factorId: f.id });
+      }
+      const { data, error } = await sb.auth.mfa.enroll({ factorType: 'totp' });
+      if (error) return avisar('No se pudo iniciar el segundo factor. Recarga la página.');
+      factorId = data.id;
+      $<HTMLImageElement>('[data-qr]').src = data.totp.qr_code;
+      $<HTMLElement>('[data-secreto]').textContent = data.totp.secret;
+      $<HTMLElement>('[data-alta]').hidden = false;
+      mostrar('mfa');
+    }
+
+    async function abrirPanel() {
+      if (!panel.firstElementChild) panel.append($<HTMLTemplateElement>('#tpl-panel').content.cloneNode(true));
+      mostrar('panel');
+      const { data, error } = await sb.from('precios_actuales').select('scooter_slug, precio_mxn, disponible, verificado_en');
+      if (error) return avisar('No se pudieron leer los últimos precios.');
+      for (const f of data as Fila[]) pintarUltimo(f.scooter_slug!, f);
+    }
+
+    function pintarUltimo(slug: string, f: Fila) {
+      const el = panel.querySelector(`li[data-slug="${CSS.escape(slug)}"] [data-ultimo]`);
+      if (el) el.textContent = `${formatoPrecio(f.precio_mxn)} · ${formatoFecha(f.verificado_en)}${f.disponible ? '' : ' · agotado'}`;
+    }
+
+    const formulario = (vista: string) => $<HTMLFormElement>(`form[data-vista="${vista}"]`);
+    const valor = (form: HTMLFormElement, nombre: string) => (form.elements.namedItem(nombre) as HTMLInputElement).value.trim();
+
+    formulario('email').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      email = valor(formulario('email'), 'email');
+      const { error } = await sb.auth.signInWithOtp({
+        email,
+        options: { shouldCreateUser: false, emailRedirectTo: `${location.origin}/admin/` },
+      });
+      if (error) console.warn('[admin] signInWithOtp', error.message);
+      // Misma respuesta exista o no la cuenta (evita la enumeración de correos).
+      avisar('Si el correo está autorizado, te llegó un enlace y un código.');
+      mostrar('codigo');
+    });
+
+    formulario('codigo').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const { error } = await sb.auth.verifyOtp({ email, token: valor(formulario('codigo'), 'codigo'), type: 'email' });
+      if (error) return avisar('Código incorrecto o vencido.');
+      avisar('');
+      evaluar();
+    });
+
+    formulario('mfa').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const form = formulario('mfa');
+      const { error } = await sb.auth.mfa.challengeAndVerify({ factorId, code: valor(form, 'totp') });
+      form.reset();
+      if (error) return avisar('Código incorrecto.');
+      avisar('');
+      evaluar();
+    });
+
+    panel.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const form = e.target as HTMLFormElement;
+      const slug = form.dataset.slug!;
+      const precio = (form.elements.namedItem('precio') as HTMLInputElement).valueAsNumber;
+      const disponible = (form.elements.namedItem('disponible') as HTMLInputElement).checked;
+      const aviso = $<HTMLElement>('[data-estado]', form);
+      if (!esPrecioValido(precio)) return (aviso.textContent = 'Escribe un precio entero entre 1 y 200,000.');
+      const boton = $<HTMLButtonElement>('button', form);
+      boton.disabled = true;
+      // Siempre una fila nueva: el historial nunca se sobrescribe.
+      const { data, error } = await sb
+        .from('precios')
+        .insert({ scooter_slug: slug, precio_mxn: precio, disponible })
+        .select('precio_mxn, disponible, verificado_en')
+        .single();
+      boton.disabled = false;
+      if (error) return (aviso.textContent = 'No se guardó. Revisa tu sesión e inténtalo de nuevo.');
+      pintarUltimo(slug, data as Fila);
+      form.reset();
+      aviso.textContent = 'Guardado.';
+    });
+
+    panel.addEventListener('click', async (e) => {
+      const boton = (e.target as Element).closest<HTMLButtonElement>('[data-publicar]');
+      if (!boton) return;
+      boton.disabled = true;
+      avisar('Publicando…');
+      const {
+        data: { session },
+      } = await sb.auth.getSession();
+      const r = await fetch('/api/publicar', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${session?.access_token ?? ''}` },
+      }).catch(() => null);
+      boton.disabled = false;
+      avisar(r?.ok ? 'Publicado: el sitio se actualiza en unos minutos.' : 'No se pudo publicar. Inténtalo de nuevo.');
+    });
+
+    salir.addEventListener('click', async () => {
+      await sb.auth.signOut();
+      panel.replaceChildren();
+      avisar('');
+      evaluar();
+    });
+
+    evaluar();
+  }
+</script>

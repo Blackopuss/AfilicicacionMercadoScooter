@@ -1,0 +1,122 @@
+---
+// Gráfica de historial de precio: SVG generado en el build, sin dependencias ni JS.
+// Uso en la ficha: <HistorialPrecio puntos={await getHistorial(slug, 90)} />
+import { formatoFecha, formatoPrecio } from '../lib/formato';
+import { resumenHistorial, type PuntoHistorial } from '../lib/historial';
+
+interface Props {
+  puntos: PuntoHistorial[];
+  ahora?: Date;
+}
+const { puntos, ahora = new Date() } = Astro.props;
+const resumen = resumenHistorial(puntos, ahora);
+
+// Coordenadas en % (el SVG se estira con preserveAspectRatio="none"; el trazo no se deforma).
+const t0 = puntos.length ? Date.parse(puntos[0].fecha) : 0;
+const rangoT = puntos.length ? Date.parse(puntos.at(-1)!.fecha) - t0 || 1 : 1;
+const x = (p: PuntoHistorial) => (puntos.length > 1 ? ((Date.parse(p.fecha) - t0) / rangoT) * 100 : 0);
+const rangoP = resumen ? resumen.max.precioMxn - resumen.min.precioMxn : 0;
+const y = (p: PuntoHistorial) => (rangoP ? ((resumen!.max.precioMxn - p.precioMxn) / rangoP) * 100 : 50);
+// Escalones: el precio se mantiene hasta la siguiente captura.
+const linea = puntos.length
+  ? `M0 ${y(puntos[0])} ` + puntos.slice(1).map((p) => `H${x(p)} V${y(p)}`).join(' ') + ' H100'
+  : '';
+
+const minimo = resumen?.minimo30d;
+const descripcion = resumen
+  ? `Precio del ${formatoFecha(puntos[0].fecha)} al ${formatoFecha(puntos.at(-1)!.fecha)}: entre ${formatoPrecio(resumen.min.precioMxn)} y ${formatoPrecio(resumen.max.precioMxn)}. ` +
+    (minimo
+      ? `Precio más bajo en 30 días: ${formatoPrecio(minimo.precioMxn)} el ${formatoFecha(minimo.fecha)}.`
+      : 'Sin stock en los últimos 30 días.')
+  : '';
+---
+
+<figure class="card p-5 md:p-6">
+  <figcaption>
+    <p class="label">Historial de precio</p>
+    {
+      resumen && (
+        <p class="mt-2 text-lg">
+          Precio más bajo en 30 días:{' '}
+          {minimo ? (
+            <>
+              <strong class="font-display text-2xl">{formatoPrecio(minimo.precioMxn)}</strong>
+              <span class="text-muted"> · {formatoFecha(minimo.fecha)}</span>
+            </>
+          ) : (
+            <strong>sin stock</strong>
+          )}
+        </p>
+      )
+    }
+  </figcaption>
+
+  {
+    resumen ? (
+      <>
+        <div class="mt-5 grid grid-cols-[auto_minmax(0,1fr)] gap-x-3 text-xs text-muted">
+          <div class="relative h-44 min-w-14 md:h-56" aria-hidden="true">
+            <span class:list={["absolute right-0 -translate-y-1/2", rangoP > 0 ? "top-3" : "top-1/2"]}>{formatoPrecio(resumen.max.precioMxn)}</span>
+            {rangoP > 0 && <span class="absolute right-0 bottom-3 translate-y-1/2">{formatoPrecio(resumen.min.precioMxn)}</span>}
+          </div>
+          <div class="relative h-44 border-b-2 border-l-2 border-line md:h-56">
+            <div class="absolute inset-x-1 inset-y-3">
+              <svg
+                role="img"
+                aria-label={descripcion}
+                class="absolute inset-0 size-full overflow-visible text-accent-ink"
+                viewBox="0 0 100 100"
+                preserveAspectRatio="none"
+              >
+                <path
+                  d={linea}
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linejoin="round"
+                  vector-effect="non-scaling-stroke"
+                />
+              </svg>
+              {minimo && (
+                <span
+                  class="absolute size-3 -translate-x-1/2 -translate-y-1/2 rounded-full bg-accent-ink ring-2 ring-surface"
+                  style={`left:${x(minimo)}%;top:${y(minimo)}%`}
+                  aria-hidden="true"
+                />
+              )}
+            </div>
+          </div>
+          <div />
+          <div class="mt-2 flex justify-between gap-2" aria-hidden="true">
+            <span>{formatoFecha(puntos[0].fecha)}</span>
+            {puntos.length > 1 && <span>{formatoFecha(puntos.at(-1)!.fecha)}</span>}
+          </div>
+        </div>
+
+        <details class="mt-4">
+          <summary class="flex min-h-11 cursor-pointer items-center font-semibold">Ver los precios en tabla</summary>
+          <table class="mt-2 w-full text-left text-sm">
+            <thead>
+              <tr class="border-b-2 border-line">
+                <th scope="col" class="py-2">Fecha</th>
+                <th scope="col" class="py-2">Precio</th>
+                <th scope="col" class="py-2">Stock</th>
+              </tr>
+            </thead>
+            <tbody>
+              {puntos.toReversed().map((p) => (
+                <tr class="border-b border-line/30">
+                  <td class="py-2">{formatoFecha(p.fecha)}</td>
+                  <td class="py-2 tabular-nums">{formatoPrecio(p.precioMxn)}</td>
+                  <td class="py-2">{p.disponible ? 'Disponible' : 'Agotado'}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </details>
+      </>
+    ) : (
+      <p class="mt-2 text-muted">Aún no hay historial de precios de este modelo.</p>
+    )
+  }
+</figure>
