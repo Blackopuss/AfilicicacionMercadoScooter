@@ -5,7 +5,7 @@
 
 Comparador de scooters eléctricos para todo México, monetizado con el Programa de Afiliados de
 Mercado Libre. Plan y decisiones: `PLAN.md`. Ramas: `README.md`. Diseño: `design-system/webafiliados/MASTER.md`.
-El nombre de la marca no está decidido: vive solo en `src/config.ts` (`SITE.name`).
+La marca es **RSCOOT**; el nombre vive solo en `src/config.ts` (`SITE.name`).
 
 Si una petición choca con estas reglas, dilo y pregunta antes de saltártelas.
 
