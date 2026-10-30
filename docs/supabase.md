@@ -13,6 +13,7 @@ Seguridad: todo sigue [`docs/seguridad.md`](seguridad.md). Resumen de la migraci
 | `precios` | leer | leer | leer, insertar, corregir, borrar | todo |
 | `precios_actuales` (vista) | leer | leer | leer | leer |
 | `alertas` | nada | nada | nada | todo |
+| `precios_ultimos_dos` (vista, 0002) y `registrar_avisos()` | nada | nada | nada | leer / ejecutar |
 | `auditoria` | nada | nada | nada | solo insertar y leer |
 
 ## 1. Crear el proyecto (plan Free)
@@ -29,6 +30,8 @@ Seguridad: todo sigue [`docs/seguridad.md`](seguridad.md). Resumen de la migraci
 - Deja activado el proveedor **Email** (inicio de sesión por enlace mágico u OTP). Ningún otro proveedor.
 
 ## 3. Aplicar la migración
+
+Aplica las migraciones en orden (`0001_init.sql`, `0002_alertas_avisos.sql`, …).
 
 Opción A (sin instalar nada): **SQL Editor → New query**, pega el contenido de
 `supabase/migrations/0001_init.sql` y pulsa **Run**.

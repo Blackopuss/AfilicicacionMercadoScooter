@@ -1,0 +1,13 @@
+---
+// Destino genérico de /api/alertas/baja: el mismo mensaje sea válido o no el enlace.
+import Layout from '../../layouts/Layout.astro';
+---
+
+<Layout title="Te diste de baja" noindex>
+  <section class="container-page pt-12 md:pt-16">
+    <p class="label">Alertas de precio</p>
+    <h1 class="slam mt-4 font-display text-[clamp(40px,9vw,104px)] leading-[0.9] tracking-[-0.04em] text-balance uppercase">Te diste de baja</h1>
+    <p class="mt-6 max-w-[60ch] text-lg">Si el enlace era válido, borramos esa alerta. No te escribiremos más sobre ese modelo.</p>
+    <a href="/" class="btn btn-ink mt-8">Volver al inicio</a>
+  </section>
+</Layout>

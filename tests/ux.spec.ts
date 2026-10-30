@@ -15,6 +15,8 @@ const PAGES = [
   '/como-puntuamos',
   '/scooter/xiaomi-electric-scooter-5',
   '/scooter/segway-ninebot-max-g2',
+  '/alertas/confirmada',
+  '/alertas/baja',
 ];
 const WIDTHS = [375, 768, 1280];
 const SCHEMES = ['light', 'dark'] as const;
