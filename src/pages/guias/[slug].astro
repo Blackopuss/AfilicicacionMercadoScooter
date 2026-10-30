@@ -3,22 +3,25 @@ import Prose from '../../layouts/Prose.astro';
 import Precio from '../../components/Precio.astro';
 import { getCollection, render, type CollectionEntry } from 'astro:content';
 import { SITE } from '../../config';
-import { getCatalogo } from '../../lib/coleccion';
+import { getCatalogo, type ScooterCatalogo } from '../../lib/coleccion';
 import { MEJORES, ranking } from '../../lib/mejores';
 
 export async function getStaticPaths() {
-  const guias = await getCollection('guias');
-  return guias.map((guia) => ({ params: { slug: guia.id }, props: { guia } }));
+  const [guias, catalogo] = await Promise.all([getCollection('guias'), getCatalogo()]);
+  return guias.map((guia) => {
+    const m = guia.data.mejores;
+    return { params: { slug: guia.id }, props: { guia, top: m ? ranking(m, catalogo).slice(0, 3) : [] } };
+  });
 }
 
 interface Props {
   guia: CollectionEntry<'guias'>;
+  top: ScooterCatalogo[];
 }
-const { guia } = Astro.props;
+const { guia, top } = Astro.props;
 const { titulo, descripcion, mejores } = guia.data;
 const [publicada, actualizada] = [guia.data.publicada, guia.data.actualizada].map((d) => d.toISOString().slice(0, 10));
 const { Content } = await render(guia);
-const top = mejores ? ranking(mejores, await getCatalogo()).slice(0, 3) : [];
 const ruta = `/guias/${guia.id}`;
 const autor = { '@type': 'Organization', name: SITE.name, url: new URL('/', Astro.site).href };
 ---
