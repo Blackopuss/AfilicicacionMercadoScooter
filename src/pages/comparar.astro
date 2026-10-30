@@ -1,0 +1,357 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Icon from '../components/Icon.astro';
+import Precio from '../components/Precio.astro';
+import { getCatalogo, type ScooterCatalogo } from '../lib/coleccion';
+import { autonomiaReal, PESO_REFERENCIA_KG } from '../lib/autonomia';
+import { MAX_COMPARAR, ORDENES } from '../lib/comparar';
+import { ESPECIFICACIONES, ETIQUETA_CATEGORIA, conUnidad, type Especificacion } from '../lib/especificaciones';
+import { formatoPrecio } from '../lib/formato';
+
+const catalogo = await getCatalogo();
+
+// Lo que el script lee de cada modelo para filtrar, ordenar y comparar (sin JSON inline: el CSP solo admite scripts por hash).
+const datos = (s: ScooterCatalogo) => ({
+  'data-slug': s.slug,
+  'data-puntuacion': s.puntuacion,
+  'data-precio': s.precioMxn ?? '',
+  'data-km': s.autonomiaFabricanteKm,
+  'data-peso': s.pesoKg,
+  'data-plegable': String(s.plegable),
+  'data-categorias': s.categorias.join(' '),
+});
+
+// Filas de la vista lado a lado: precio, puntuación y autonomía real primero, luego las del fabricante.
+type FilaComparar = Omit<Especificacion, 'texto' | 'valor'> & {
+  texto: (s: ScooterCatalogo) => string;
+  valor?: (s: ScooterCatalogo) => number | null;
+  real?: boolean;
+};
+const filasComparar: FilaComparar[] = [
+  { etiqueta: 'Precio', texto: (s) => formatoPrecio(s.precioMxn), valor: (s) => s.precioMxn, menorEsMejor: true },
+  { etiqueta: 'Puntuación', texto: (s) => `${s.puntuacion}/100`, valor: (s) => s.puntuacion },
+  { etiqueta: 'Autonomía real', texto: (s) => `${autonomiaReal(s)} km`, valor: (s) => autonomiaReal(s), real: true },
+  ...ESPECIFICACIONES,
+];
+const campo = 'min-h-11 w-full border-2 border-line bg-surface px-3';
+---
+
+<Layout
+  title="Comparar scooters eléctricos"
+  description="Todos los scooters eléctricos que puedes comprar en México: filtra por precio, autonomía real con tu peso, peso y categoría, y compara hasta 3 lado a lado."
+>
+  <section class="container-page pt-10">
+    <p class="label">{catalogo.length} modelos · México</p>
+    <h1 class="slam mt-2 font-display text-[clamp(48px,9vw,120px)] leading-[0.88] tracking-[-0.04em] uppercase">
+      Comparar
+    </h1>
+    <p class="mt-4 max-w-2xl text-lg text-pretty">
+      Ordenados por <a href="/como-puntuamos" class="font-semibold underline underline-offset-4">nuestra puntuación</a>.
+      Elige hasta {MAX_COMPARAR} para verlos lado a lado.
+    </p>
+
+    <form data-filtros data-js hidden class="card mt-8 grid gap-4 p-5 sm:grid-cols-2 lg:grid-cols-4" aria-label="Filtros">
+      <label class="grid gap-1">
+        <span class="label">Precio máximo ($)</span>
+        <input name="precioMax" type="number" inputmode="numeric" min="0" step="500" placeholder="Sin límite" class={campo} />
+      </label>
+      <label class="grid gap-1">
+        <span class="label">Autonomía real mínima (km)</span>
+        <input name="autonomiaMin" type="number" inputmode="numeric" min="0" placeholder="Sin mínimo" class={campo} />
+      </label>
+      <label class="grid gap-1">
+        <span class="label">Tu peso (kg)</span>
+        <input name="pesoConductorKg" type="number" inputmode="numeric" min="30" max="200" value={PESO_REFERENCIA_KG} class={campo} />
+      </label>
+      <label class="grid gap-1">
+        <span class="label">Peso máximo del scooter (kg)</span>
+        <input name="pesoMax" type="number" inputmode="numeric" min="0" placeholder="Sin límite" class={campo} />
+      </label>
+      <label class="grid gap-1">
+        <span class="label">Categoría</span>
+        <select name="categoria" class={campo}>
+          <option value="">Todas</option>
+          {Object.entries(ETIQUETA_CATEGORIA).map(([v, t]) => <option value={v}>{t}</option>)}
+        </select>
+      </label>
+      <label class="grid gap-1">
+        <span class="label">Ordenar por</span>
+        <select name="orden" class={campo}>
+          {Object.entries(ORDENES).map(([v, t]) => <option value={v}>{t}</option>)}
+        </select>
+      </label>
+      <label class="flex min-h-11 cursor-pointer items-center gap-2 self-end font-semibold">
+        <input name="soloPlegables" type="checkbox" class="size-5 accent-accent" />
+        Solo plegables
+      </label>
+      <p class="self-end font-semibold" aria-live="polite" data-conteo>{catalogo.length} modelos</p>
+    </form>
+
+    <!-- Móvil: tarjetas -->
+    <ul class="mt-8 grid gap-4 md:hidden" data-lista>
+      {
+        catalogo.map((s) => (
+          <li class="card p-5" {...datos(s)}>
+            <div class="flex items-start justify-between gap-4">
+              <div>
+                <p class="label">{s.marca}</p>
+                <h2 class="mt-1 text-xl font-bold">
+                  <a href={`/scooter/${s.slug}`} class="inline-flex min-h-11 items-center underline-offset-4 hover:underline">{s.modelo}</a>
+                </h2>
+              </div>
+              <p class="font-display text-4xl leading-none tabular-nums">
+                {s.puntuacion}
+                <span class="sr-only">{' '}de 100 puntos</span>
+              </p>
+            </div>
+            <div class="mt-3"><Precio precio={s.precio} class="text-xl" /></div>
+            <dl class="mt-3 grid grid-cols-3 gap-2 text-sm">
+              <div><dt class="text-muted">Autonomía real</dt><dd class="font-semibold tabular-nums"><span data-real>{autonomiaReal(s)}</span> km</dd></div>
+              <div><dt class="text-muted">Peso</dt><dd class="font-semibold tabular-nums">{conUnidad(s.pesoKg, 'kg')}</dd></div>
+              <div><dt class="text-muted">Plegable</dt><dd class="font-semibold">{s.plegable ? 'Sí' : 'No'}</dd></div>
+            </dl>
+            <label class="mt-3 flex min-h-11 cursor-pointer items-center gap-2 font-semibold" data-js hidden>
+              <input type="checkbox" value={s.slug} data-sel class="size-5 accent-accent" />
+              Comparar <span class="sr-only">{s.marca} {s.modelo}</span>
+            </label>
+          </li>
+        ))
+      }
+    </ul>
+
+    <!-- Escritorio: tabla con scroll horizontal dentro de su caja -->
+    <div class="card relative mt-8 hidden overflow-x-auto md:block" tabindex="0">
+      <table class="w-full min-w-[56rem] text-left">
+        <caption class="sr-only">Scooters eléctricos ordenados por puntuación</caption>
+        <thead class="border-b-2 border-line">
+          <tr>
+            <th scope="col" class="label p-4">Modelo</th>
+            <th scope="col" class="label p-4">Puntos</th>
+            <th scope="col" class="label p-4">Precio</th>
+            <th scope="col" class="label p-4">Autonomía real</th>
+            <th scope="col" class="label p-4">Velocidad</th>
+            <th scope="col" class="label p-4">Peso</th>
+            <th scope="col" class="label p-4">Plegable</th>
+            <th scope="col" class="label p-4" data-js hidden>Comparar</th>
+          </tr>
+        </thead>
+        <tbody data-lista>
+          {
+            catalogo.map((s) => (
+              <tr class="border-b-2 border-line last:border-b-0" {...datos(s)}>
+                <th scope="row" class="p-4">
+                  <span class="label block text-muted">{s.marca}</span>
+                  <a href={`/scooter/${s.slug}`} class="inline-flex min-h-11 items-center font-bold underline-offset-4 hover:underline">{s.modelo}</a>
+                </th>
+                <td class="p-4 font-display text-2xl tabular-nums">{s.puntuacion}</td>
+                <td class="p-4"><Precio precio={s.precio} class="text-lg" /></td>
+                <td class="p-4 tabular-nums"><span data-real>{autonomiaReal(s)}</span> km</td>
+                <td class="p-4 tabular-nums">{conUnidad(s.velocidadMaxKmh, 'km/h')}</td>
+                <td class="p-4 tabular-nums">{conUnidad(s.pesoKg, 'kg')}</td>
+                <td class="p-4">{s.plegable ? 'Sí' : 'No'}</td>
+                <td class="p-4" data-js hidden>
+                  <label class="flex min-h-11 cursor-pointer items-center gap-2">
+                    <input type="checkbox" value={s.slug} data-sel class="size-5 accent-accent" />
+                    <span class="sr-only">Comparar {s.marca} {s.modelo}</span>
+                  </label>
+                </td>
+              </tr>
+            ))
+          }
+        </tbody>
+      </table>
+    </div>
+    <p data-vacio hidden class="mt-8 text-lg font-semibold">Ningún modelo cumple los filtros.</p>
+  </section>
+
+  <!-- Vista lado a lado: todas las columnas se pintan en el servidor y el script muestra solo las elegidas -->
+  <section id="lado-a-lado" data-comparacion hidden class="container-page mt-16 scroll-mt-24" aria-labelledby="lado-title">
+    <div class="flex flex-wrap items-end justify-between gap-4 border-b-2 border-line pb-4">
+      <h2 id="lado-title" tabindex="-1" class="font-display text-[clamp(32px,5vw,64px)] leading-[0.9] tracking-[-0.03em] uppercase">
+        Lado a lado
+      </h2>
+      <p class="flex items-center gap-2 font-semibold">
+        <Icon name="check" class="size-5 text-good" /> = gana en esa especificación
+      </p>
+    </div>
+    <div class="card relative mt-6 overflow-x-auto" tabindex="0">
+      <table class="w-full text-left">
+        <caption class="sr-only">Comparación de especificaciones</caption>
+        <thead class="border-b-2 border-line">
+          <tr>
+            <td class="p-4"></td>
+            {
+              catalogo.map((s) => (
+                <th scope="col" class="min-w-40 p-4" data-col={s.slug} hidden>
+                  <span class="label block text-muted">{s.marca}</span>
+                  <a href={`/scooter/${s.slug}`} class="inline-flex min-h-11 items-center font-bold underline-offset-4 hover:underline">{s.modelo}</a>
+                </th>
+              ))
+            }
+          </tr>
+        </thead>
+        <tbody>
+          {
+            filasComparar.map((f) => (
+              <tr class="border-b-2 border-line last:border-b-0" data-fila data-menor={f.menorEsMejor ? '' : undefined} data-autonomia-real={f.real ? '' : undefined}>
+                <th scope="row" class="p-4 font-semibold">{f.etiqueta}</th>
+                {catalogo.map((s) => (
+                  <td class="p-4 tabular-nums data-[gana]:bg-surface-2 data-[gana]:font-bold" data-col={s.slug} data-valor={f.valor?.(s) ?? undefined} hidden>
+                    <span class="inline-flex items-center gap-1">
+                      <span data-texto>{f.texto(s)}</span>
+                      <span data-gana-icono hidden class="text-good">
+                        <Icon name="check" class="size-5" />
+                        <span class="sr-only">(gana)</span>
+                      </span>
+                    </span>
+                  </td>
+                ))}
+              </tr>
+            ))
+          }
+        </tbody>
+      </table>
+    </div>
+    <button type="button" data-cerrar class="btn btn-outline mt-6">Cerrar comparación</button>
+  </section>
+
+  <!-- Barra fija de selección -->
+  <div data-barra hidden class="fixed inset-x-0 bottom-0 z-30 border-t-2 border-line bg-bg">
+    <div class="container-page flex items-center justify-between gap-3 py-3">
+      <button type="button" data-limpiar class="btn btn-outline px-4">Limpiar</button>
+      <button type="button" data-comparar class="btn btn-ink disabled:cursor-not-allowed disabled:opacity-60">
+        <Icon name="compare" class="size-5" />
+        <span data-n>Comparar (0)</span>
+      </button>
+    </div>
+  </div>
+</Layout>
+
+<script>
+  import { autonomiaReal, PESO_REFERENCIA_KG } from '../lib/autonomia';
+  import { filtrarYOrdenar, ganadores, leerSeleccion, MAX_COMPARAR, type Fila, type Orden } from '../lib/comparar';
+
+  const form = document.querySelector<HTMLFormElement>('[data-filtros]')!;
+  const listas = [...document.querySelectorAll<HTMLElement>('[data-lista]')];
+  const items = (lista: HTMLElement) => [...lista.querySelectorAll<HTMLElement>(':scope > [data-slug]')];
+  const filas: Fila[] = items(listas[0]).map(({ dataset: d }) => ({
+    slug: d.slug!,
+    puntuacion: Number(d.puntuacion),
+    precioMxn: d.precio ? Number(d.precio) : null,
+    autonomiaFabricanteKm: Number(d.km),
+    pesoKg: Number(d.peso),
+    plegable: d.plegable === 'true',
+    categorias: d.categorias!.split(' '),
+  }));
+  const porSlug = new Map(filas.map((f) => [f.slug, f]));
+  const seleccion = new Set<string>();
+
+  const numero = (nombre: string) => {
+    const v = (form.elements.namedItem(nombre) as HTMLInputElement).valueAsNumber;
+    return Number.isFinite(v) ? v : undefined;
+  };
+  const pesoConductor = () => {
+    const kg = numero('pesoConductorKg');
+    return kg !== undefined && kg >= 30 && kg <= 200 ? kg : PESO_REFERENCIA_KG;
+  };
+
+  function aplicarFiltros() {
+    const datos = new FormData(form);
+    const pesoKg = pesoConductor();
+    const visibles = filtrarYOrdenar(
+      filas,
+      {
+        precioMax: numero('precioMax'),
+        autonomiaMin: numero('autonomiaMin'),
+        pesoConductorKg: pesoKg,
+        pesoMax: numero('pesoMax'),
+        soloPlegables: datos.has('soloPlegables'),
+        categoria: String(datos.get('categoria') ?? ''),
+      },
+      datos.get('orden') as Orden,
+    );
+    const orden = new Map(visibles.map((slug, i) => [slug, i]));
+    for (const lista of listas) {
+      const todos = items(lista);
+      for (const el of todos) {
+        el.hidden = !orden.has(el.dataset.slug!);
+        el.querySelector('[data-real]')!.textContent = String(autonomiaReal(porSlug.get(el.dataset.slug!)!, { pesoKg }));
+      }
+      todos.sort((a, b) => (orden.get(a.dataset.slug!) ?? Infinity) - (orden.get(b.dataset.slug!) ?? Infinity));
+      lista.append(...todos);
+    }
+    document.querySelector('[data-conteo]')!.textContent = visibles.length === 1 ? '1 modelo' : `${visibles.length} modelos`;
+    document.querySelector<HTMLElement>('[data-vacio]')!.hidden = visibles.length > 0;
+    pintarComparacion();
+  }
+
+  // Selección: los checkboxes de tarjetas y tabla del mismo modelo van sincronizados.
+  function pintarSeleccion() {
+    for (const cb of document.querySelectorAll<HTMLInputElement>('[data-sel]')) {
+      cb.checked = seleccion.has(cb.value);
+      cb.disabled = !cb.checked && seleccion.size >= MAX_COMPARAR;
+    }
+    document.querySelector<HTMLElement>('[data-barra]')!.hidden = seleccion.size === 0;
+    document.body.classList.toggle('pb-24', seleccion.size > 0); // que la barra fija no tape el final de la página
+    document.querySelector('[data-n]')!.textContent = `Comparar (${seleccion.size})`;
+    document.querySelector<HTMLButtonElement>('[data-comparar]')!.disabled = seleccion.size < 2;
+  }
+
+  const comparacion = document.querySelector<HTMLElement>('[data-comparacion]')!;
+  function pintarComparacion() {
+    const elegidos = leerSeleccion(new URL(location.href).searchParams.get('m'), porSlug.keys());
+    comparacion.hidden = elegidos.length === 0;
+    const pesoKg = pesoConductor();
+    for (const el of comparacion.querySelectorAll<HTMLElement>('[data-col]')) el.hidden = !elegidos.includes(el.dataset.col!);
+    for (const fila of comparacion.querySelectorAll<HTMLElement>('[data-fila]')) {
+      const celdas = elegidos.map((slug) => fila.querySelector<HTMLElement>(`[data-col="${slug}"]`)!);
+      if ('autonomiaReal' in fila.dataset) {
+        for (const celda of celdas) {
+          const km = autonomiaReal(porSlug.get(celda.dataset.col!)!, { pesoKg });
+          celda.dataset.valor = String(km);
+          celda.querySelector('[data-texto]')!.textContent = `${km} km`;
+        }
+      }
+      const valores = celdas.map((c) => (c.dataset.valor ? Number(c.dataset.valor) : null));
+      ganadores(valores, 'menor' in fila.dataset).forEach((gana, i) => {
+        celdas[i].toggleAttribute('data-gana', gana);
+        celdas[i].querySelector<HTMLElement>('[data-gana-icono]')!.hidden = !gana;
+      });
+    }
+  }
+
+  function irAComparar(slugs: string[]) {
+    const url = new URL(location.href);
+    url.search = slugs.length ? `?m=${slugs.join(',')}` : ''; // comas legibles en el enlace (los slugs no llevan nada que escapar)
+    url.hash = slugs.length ? 'lado-a-lado' : '';
+    history.pushState(null, '', url);
+    pintarComparacion();
+  }
+
+  form.addEventListener('input', aplicarFiltros);
+  form.addEventListener('submit', (e) => e.preventDefault());
+  document.addEventListener('change', (e) => {
+    const cb = e.target as HTMLInputElement;
+    if (!cb.matches('[data-sel]')) return;
+    if (cb.checked) seleccion.add(cb.value);
+    else seleccion.delete(cb.value);
+    pintarSeleccion();
+  });
+  document.querySelector('[data-limpiar]')!.addEventListener('click', () => {
+    seleccion.clear();
+    pintarSeleccion();
+  });
+  document.querySelector('[data-comparar]')!.addEventListener('click', () => {
+    irAComparar([...seleccion]);
+    comparacion.scrollIntoView();
+    comparacion.querySelector<HTMLElement>('#lado-title')!.focus();
+  });
+  document.querySelector('[data-cerrar]')!.addEventListener('click', () => irAComparar([]));
+  addEventListener('popstate', pintarComparacion);
+
+  // Un enlace ?m= llega con esos modelos ya seleccionados.
+  for (const slug of leerSeleccion(new URL(location.href).searchParams.get('m'), porSlug.keys())) seleccion.add(slug);
+  document.querySelectorAll<HTMLElement>('[data-js]').forEach((el) => (el.hidden = false));
+  pintarSeleccion();
+  aplicarFiltros();
+</script>

@@ -1,6 +1,6 @@
-// Brand name lives only here so it can be swapped once the name is chosen.
+// Brand name lives only here.
 export const SITE = {
-  name: 'Marca',
+  name: 'RSCOOT',
   description:
     'Compara los scooters eléctricos que puedes comprar hoy en México: precio verificado cada día, historial de precios y autonomía real.',
 };

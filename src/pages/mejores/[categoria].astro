@@ -1,0 +1,97 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import Icon from '../../components/Icon.astro';
+import Precio from '../../components/Precio.astro';
+import { getCatalogo, type ScooterCatalogo } from '../../lib/coleccion';
+import { CATEGORIAS_MEJORES, MEJORES, ranking, type CategoriaMejores } from '../../lib/mejores';
+import { rutaVs } from '../../lib/versus';
+
+export async function getStaticPaths() {
+  const catalogo = await getCatalogo();
+  return CATEGORIAS_MEJORES.map((categoria) => ({ params: { categoria }, props: { categoria, modelos: ranking(categoria, catalogo) } }));
+}
+
+interface Props {
+  categoria: CategoriaMejores;
+  modelos: ScooterCatalogo[];
+}
+const { categoria, modelos } = Astro.props;
+const m = MEJORES[categoria];
+const [primero, segundo] = modelos;
+// Cada modelo se compara con el número 1; el número 1, con el 2.
+const rival = (s: ScooterCatalogo) => (s === primero ? segundo : primero);
+const otras = CATEGORIAS_MEJORES.filter((c) => c !== categoria);
+---
+
+<Layout
+  title={`${m.titulo} en México`}
+  description={`${m.titulo}: ${modelos.length} modelos ordenados por nuestra puntuación, con autonomía real y precio verificado en México.`}
+>
+  <section class="container-page pt-10">
+    <p class="label">Ranking · {modelos.length} modelos</p>
+    <h1 class="slam mt-2 font-display text-[clamp(40px,8vw,104px)] leading-[0.9] tracking-[-0.04em] text-balance uppercase">
+      {m.titulo}
+    </h1>
+    <div class="card mt-8 max-w-3xl p-6">
+      <p class="label">Criterio</p>
+      <p class="mt-2 text-lg text-pretty">{m.criterio}</p>
+      <p class="mt-3 text-muted">
+        Ordenados por <a href="/como-puntuamos" class="font-semibold underline underline-offset-4">nuestra puntuación</a>, que no
+        cambia por las comisiones.
+      </p>
+    </div>
+
+    {
+      modelos.length === 0 ? (
+        <p class="mt-10 text-muted">Ningún modelo del catálogo cumple este criterio todavía.</p>
+      ) : (
+        <ol class="mt-10 grid gap-5">
+          {modelos.map((s, i) => (
+            <li class="card grid gap-4 p-6 md:grid-cols-[auto_1fr_auto] md:items-center">
+              <p class="font-display text-5xl leading-none text-accent-ink tabular-nums" aria-hidden="true">
+                {i + 1}
+              </p>
+              <div>
+                <p class="label">{s.marca}</p>
+                <h2 class="mt-1 text-2xl font-bold">
+                  <span class="sr-only">{i + 1}. </span>
+                  <a href={`/scooter/${s.slug}`} class="underline-offset-4 hover:underline">{s.modelo}</a>
+                </h2>
+                <p class="mt-2 text-muted">
+                  {m.dato.etiqueta}: <span class="font-semibold text-fg tabular-nums">{m.dato.texto(s)}</span>
+                </p>
+                {rival(s) && (
+                  <a href={rutaVs(s.slug, rival(s)!.slug)} class="mt-1 inline-flex min-h-11 items-center gap-2 font-semibold underline underline-offset-4">
+                    <Icon name="compare" class="size-4" />
+                    {s.modelo} vs {rival(s)!.modelo}
+                  </a>
+                )}
+              </div>
+              <div class="md:text-right">
+                <p class="font-display text-4xl tabular-nums">
+                  {s.puntuacion}<span class="text-base text-muted">/100</span>
+                </p>
+                <Precio precio={s.precio} class="text-xl" />
+              </div>
+            </li>
+          ))}
+        </ol>
+      )
+    }
+
+    <nav class="mt-16" aria-labelledby="otras-title">
+      <h2 id="otras-title" class="font-display text-[clamp(28px,4vw,44px)] leading-[0.95] tracking-[-0.03em] uppercase">
+        Otros rankings
+      </h2>
+      <ul class="mt-4 flex flex-wrap gap-2">
+        {
+          otras.map((c) => (
+            <li>
+              <a href={`/mejores/${c}`} class="btn btn-outline">{MEJORES[c].nombre}</a>
+            </li>
+          ))
+        }
+      </ul>
+    </nav>
+  </section>
+</Layout>

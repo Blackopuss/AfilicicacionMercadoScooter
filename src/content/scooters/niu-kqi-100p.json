@@ -1,0 +1,29 @@
+{
+  "marca": "NIU",
+  "modelo": "KQi 100P",
+  "autonomiaFabricanteKm": 29,
+  "velocidadMaxKmh": 28,
+  "potenciaW": 300,
+  "potenciaPicoW": 600,
+  "bateriaWh": 243,
+  "voltajeV": 48,
+  "pesoKg": 17.3,
+  "cargaMaxKg": 120,
+  "ruedaPulgadas": 9.5,
+  "tipoRueda": "neumatica",
+  "proteccionIP": "IPX5",
+  "plegable": true,
+  "suspension": "delantera",
+  "frenos": "Tambor delantero y freno regenerativo",
+  "pendienteMaxPct": 15,
+  "tiempoCargaH": 6,
+  "categorias": [
+    "urbano",
+    "plegable"
+  ],
+  "fuenteSpecs": "https://shop.niu.com/products/niu-kqi-100p-electric-scooter",
+  "linkAfiliado": null,
+  "tipoVendedor": null,
+  "foto": null,
+  "activo": true
+}

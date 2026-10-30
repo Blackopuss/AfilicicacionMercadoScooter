@@ -1,0 +1,287 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import Icon from '../../components/Icon.astro';
+import Precio from '../../components/Precio.astro';
+import HistorialPrecio from '../../components/HistorialPrecio.astro';
+import AlertaForm from '../../components/AlertaForm.astro';
+import { getCatalogo, type ScooterCatalogo } from '../../lib/coleccion';
+import { autonomiaReal, PESO_REFERENCIA_KG } from '../../lib/autonomia';
+import { alternativasMasBaratas } from '../../lib/comparar';
+import { CLAVE, ESPECIFICACIONES } from '../../lib/especificaciones';
+import { getHistorial } from '../../lib/historial';
+import { categoriasDe, MEJORES } from '../../lib/mejores';
+import { percentil } from '../../lib/puntuacion';
+import { rivales, rutaVs } from '../../lib/versus';
+
+export async function getStaticPaths() {
+  const catalogo = await getCatalogo();
+  return catalogo.map((scooter) => ({ params: { slug: scooter.slug }, props: { scooter, catalogo } }));
+}
+
+interface Props {
+  scooter: ScooterCatalogo;
+  catalogo: ScooterCatalogo[];
+}
+const { scooter: s, catalogo } = Astro.props;
+const nombre = `${s.marca} ${s.modelo}`;
+const real = autonomiaReal(s);
+const barras = CLAVE.map((c) => ({ ...c, pct: percentil(c.campo, s, catalogo) }));
+const alternativas = alternativasMasBaratas(s, catalogo);
+const caraACara = rivales(s, catalogo);
+const descripcion = `${nombre}: ${s.puntuacion}/100 en nuestra puntuación, ${real} km de autonomía real (${s.autonomiaFabricanteKm} km según el fabricante), ${s.velocidadMaxKmh} km/h y ${s.pesoKg} kg. Precio en México con fecha de verificación.`;
+// Sin calificaciones ni reseñas: solo datos del fabricante y, si existe, el precio verificado.
+const producto = {
+  '@context': 'https://schema.org',
+  '@type': 'Product',
+  name: nombre,
+  brand: { '@type': 'Brand', name: s.marca },
+  model: s.modelo,
+  category: 'Scooter eléctrico',
+  description: descripcion,
+  ...(s.precio && {
+    offers: {
+      '@type': 'Offer',
+      price: s.precio.precioMxn,
+      priceCurrency: 'MXN',
+      availability: `https://schema.org/${s.precio.disponible ? 'InStock' : 'OutOfStock'}`,
+      itemCondition: 'https://schema.org/NewCondition',
+    },
+  }),
+};
+---
+
+<Layout
+  title={`${nombre}: precio, autonomía real y puntuación`}
+  description={descripcion}
+  migas={[{ nombre: 'Comparar', ruta: '/comparar' }, { nombre, ruta: `/scooter/${s.slug}` }]}
+  jsonLd={[producto]}
+>
+  <article class="container-page pt-10">
+    <a href="/comparar" class="inline-flex min-h-11 items-center gap-2 font-semibold underline-offset-4 hover:underline">
+      <Icon name="arrow" class="size-4 rotate-180" />
+      Todos los scooters
+    </a>
+    <p class="label mt-6">{s.marca}</p>
+    <h1 class="slam mt-2 font-display text-[clamp(40px,7vw,96px)] leading-[0.9] tracking-[-0.04em] uppercase">
+      {s.modelo}
+    </h1>
+    <ul class="mt-4 flex flex-wrap gap-2" aria-label="Rankings en los que aparece">
+      {
+        categoriasDe(s).map((c) => (
+          <li>
+            <a href={`/mejores/${c}`} class="inline-flex min-h-11 items-center rounded-full bg-surface-2 px-4 text-sm font-semibold underline-offset-4 hover:underline">
+              {MEJORES[c].nombre}
+            </a>
+          </li>
+        ))
+      }
+    </ul>
+
+    <div class="mt-8 grid gap-6 md:grid-cols-2">
+      <div class="card grid aspect-[4/3] place-items-center bg-surface-2 text-muted" role="img" aria-label={`Foto de ${nombre} pendiente`}>
+        <div class="grid justify-items-center gap-2">
+          <Icon name="zap" class="size-12" />
+          <span class="label">Foto pendiente</span>
+        </div>
+      </div>
+
+      <div class="flex flex-col gap-6">
+        <div class="card p-6">
+          <p class="label">Nuestra puntuación</p>
+          <p class="mt-2 overflow-hidden font-display text-[clamp(72px,12vw,128px)] leading-none tabular-nums">
+            <span class="rise-num">{s.puntuacion}</span><span class="text-3xl text-muted">/100</span>
+          </p>
+          <a href="/como-puntuamos" class="mt-2 inline-flex min-h-11 items-center text-sm font-semibold underline underline-offset-4">
+            Cómo puntuamos
+          </a>
+        </div>
+
+        <div class="card p-6">
+          <p class="label">Precio en México</p>
+          <div class="mt-2"><Precio precio={s.precio} class="text-4xl" /></div>
+          {
+            s.linkAfiliado && (
+              <>
+                <a href={s.linkAfiliado} rel="sponsored nofollow noopener" target="_blank" class="btn btn-accent mt-5 w-full">
+                  Ver en Mercado Libre
+                  <Icon name="arrow" class="size-4" />
+                </a>
+                <p class="mt-3 text-sm text-muted">
+                  Enlace de afiliado: si compras, ganamos una comisión sin costo extra para ti.{' '}
+                  <a href="/como-ganamos-dinero" class="font-semibold underline underline-offset-4">Cómo ganamos dinero</a>
+                </p>
+              </>
+            )
+          }
+        </div>
+      </div>
+    </div>
+
+    <!-- Autonomía real: el valor del servidor es el de 75 kg en plano; el script lo recalcula -->
+    <section class="mt-16" aria-labelledby="autonomia-title">
+      <h2 id="autonomia-title" class="font-display text-[clamp(32px,5vw,56px)] leading-[0.9] tracking-[-0.03em] uppercase">
+        Autonomía real
+      </h2>
+      <div
+        class="card mt-6 grid gap-6 p-6 md:grid-cols-[1fr_auto] md:items-end"
+        data-autonomia
+        data-km={s.autonomiaFabricanteKm}
+        data-peso={s.pesoKg}
+      >
+        <div>
+          <p class="font-display text-[clamp(56px,10vw,104px)] leading-none tabular-nums">
+            <output data-km-real aria-live="polite">{real}</output> <span class="text-3xl">km</span>
+          </p>
+          <p class="mt-2 text-muted">
+            El fabricante dice {s.autonomiaFabricanteKm} km. Esta es nuestra estimación en ciudad con{' '}
+            <span data-resumen>{PESO_REFERENCIA_KG} kg y sin subidas</span>.
+          </p>
+        </div>
+        <div class="flex flex-wrap items-end gap-4" data-js hidden>
+          <label class="grid gap-1">
+            <span class="label">Tu peso (kg)</span>
+            <input
+              type="number"
+              inputmode="numeric"
+              min="30"
+              max="200"
+              value={PESO_REFERENCIA_KG}
+              data-peso-conductor
+              class="min-h-11 w-28 border-2 border-line bg-surface px-3 tabular-nums"
+            />
+          </label>
+          <label class="flex min-h-11 cursor-pointer items-center gap-2 font-semibold">
+            <input type="checkbox" data-subidas class="size-5 accent-accent" />
+            Con subidas
+          </label>
+        </div>
+      </div>
+    </section>
+
+    <section class="mt-16" aria-labelledby="percentiles-title">
+      <h2 id="percentiles-title" class="font-display text-[clamp(32px,5vw,56px)] leading-[0.9] tracking-[-0.03em] uppercase">
+        Frente a los demás
+      </h2>
+      <p class="mt-3 text-muted">Qué porcentaje de los {catalogo.length - 1} modelos restantes supera en cada especificación.</p>
+      <ul class="card mt-6 grid gap-5 p-6 md:grid-cols-2">
+        {
+          barras.map((b, i) => (
+            <li>
+              <p class="flex justify-between gap-4">
+                <span class="label">{b.etiqueta}</span>
+                <span class="text-sm font-semibold tabular-nums">{b.pct === null ? 'Sin dato' : `Supera al ${b.pct} %`}</span>
+              </p>
+              <div class="mt-2 h-5 bg-surface-2" aria-hidden="true">
+                <div class="grow-x h-5 bg-accent" style={`width:${b.pct ?? 0}%; --i:${i}`} />
+              </div>
+            </li>
+          ))
+        }
+      </ul>
+    </section>
+
+    <section class="mt-16" aria-labelledby="specs-title">
+      <h2 id="specs-title" class="font-display text-[clamp(32px,5vw,56px)] leading-[0.9] tracking-[-0.03em] uppercase">
+        Especificaciones
+      </h2>
+      <div class="card mt-6">
+        <table class="w-full text-left">
+          <caption class="sr-only">Especificaciones de {nombre}</caption>
+          <tbody>
+            {
+              ESPECIFICACIONES.map((e) => (
+                <tr class="border-b-2 border-line last:border-b-0">
+                  <th scope="row" class="w-1/2 p-4 font-semibold">{e.etiqueta}</th>
+                  <td class="p-4 tabular-nums">{e.texto(s)}</td>
+                </tr>
+              ))
+            }
+          </tbody>
+        </table>
+      </div>
+      <p class="mt-3 text-sm text-muted">
+        Fuente:{' '}
+        <a href={s.fuenteSpecs} rel="noopener" target="_blank" class="font-semibold underline underline-offset-4">ficha oficial del fabricante</a>
+      </p>
+    </section>
+
+    <section class="mt-16" aria-labelledby="alternativas-title">
+      <h2 id="alternativas-title" class="font-display text-[clamp(32px,5vw,56px)] leading-[0.9] tracking-[-0.03em] uppercase">
+        Alternativas más baratas
+      </h2>
+      {
+        alternativas.length > 0 ? (
+          <ul class="mt-6 grid gap-5 sm:grid-cols-3">
+            {alternativas.map((a) => (
+              <li class="card card-lift relative p-6">
+                <p class="label">{a.marca}</p>
+                <h3 class="mt-1 text-xl font-bold">
+                  <a href={`/scooter/${a.slug}`} class="after:absolute after:inset-0">{a.modelo}</a>
+                </h3>
+                <p class="mt-3 font-display text-3xl tabular-nums">{a.puntuacion}<span class="text-base text-muted">/100</span></p>
+                <div class="mt-2"><Precio precio={a.precio} class="text-xl" /></div>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p class="mt-4 text-muted">
+            {s.precio ? 'No hay modelos más baratos con precio verificado.' : 'Aparecerán cuando tengamos precios verificados.'}
+          </p>
+        )
+      }
+    </section>
+
+    <section class="mt-16" aria-labelledby="vs-title">
+      <h2 id="vs-title" class="font-display text-[clamp(32px,5vw,56px)] leading-[0.9] tracking-[-0.03em] uppercase">
+        Cara a cara
+      </h2>
+      <ul class="mt-6 grid gap-5 sm:grid-cols-3">
+        {
+          caraACara.map((r) => (
+            <li class="card card-lift relative p-6">
+              <p class="label">{s.modelo} vs</p>
+              <h3 class="mt-1 text-xl font-bold">
+                <a href={rutaVs(s.slug, r.slug)} class="inline-flex min-h-11 items-center after:absolute after:inset-0">{r.marca} {r.modelo}</a>
+              </h3>
+              <p class="mt-3 tabular-nums text-muted">{s.puntuacion}/100 contra {r.puntuacion}/100</p>
+            </li>
+          ))
+        }
+      </ul>
+    </section>
+
+    <section id="historial" class="mt-16" aria-labelledby="historial-title">
+      <h2 id="historial-title" class="font-display text-[clamp(32px,5vw,56px)] leading-[0.9] tracking-[-0.03em] uppercase">
+        Historial de precios
+      </h2>
+      <div class="mt-6"><HistorialPrecio puntos={await getHistorial(s.slug, 90)} /></div>
+    </section>
+
+    <section id="alerta" class="mt-16" aria-labelledby="alerta-title">
+      <h2 id="alerta-title" class="font-display text-[clamp(32px,5vw,56px)] leading-[0.9] tracking-[-0.03em] uppercase">
+        Avísame si baja
+      </h2>
+      <p class="mt-3 max-w-[60ch] text-muted">Te mandamos un correo cuando el {nombre} baje de precio. Te das de baja en un clic.</p>
+      <div class="card mt-6 max-w-xl p-6"><AlertaForm id="alerta-ficha" slug={s.slug} /></div>
+    </section>
+  </article>
+</Layout>
+
+<script>
+  import { autonomiaReal, PESO_REFERENCIA_KG } from '../../lib/autonomia';
+
+  const caja = document.querySelector<HTMLElement>('[data-autonomia]');
+  if (caja) {
+    const peso = caja.querySelector<HTMLInputElement>('[data-peso-conductor]')!;
+    const subidas = caja.querySelector<HTMLInputElement>('[data-subidas]')!;
+    const scooter = { autonomiaFabricanteKm: Number(caja.dataset.km), pesoKg: Number(caja.dataset.peso) };
+    const actualizar = () => {
+      const kg = peso.valueAsNumber >= 30 && peso.valueAsNumber <= 200 ? peso.valueAsNumber : PESO_REFERENCIA_KG;
+      caja.querySelector('[data-km-real]')!.textContent = String(autonomiaReal(scooter, { pesoKg: kg, conSubidas: subidas.checked }));
+      caja.querySelector('[data-resumen]')!.textContent = `${kg} kg y ${subidas.checked ? 'con' : 'sin'} subidas`;
+    };
+    peso.addEventListener('input', actualizar);
+    subidas.addEventListener('change', actualizar);
+    caja.querySelectorAll<HTMLElement>('[data-js]').forEach((el) => (el.hidden = false));
+  }
+</script>

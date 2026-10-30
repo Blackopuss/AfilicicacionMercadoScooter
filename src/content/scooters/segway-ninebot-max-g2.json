@@ -1,0 +1,29 @@
+{
+  "marca": "Segway-Ninebot",
+  "modelo": "Max G2",
+  "autonomiaFabricanteKm": 70,
+  "velocidadMaxKmh": 35,
+  "potenciaW": 450,
+  "potenciaPicoW": 1000,
+  "bateriaWh": 551,
+  "voltajeV": null,
+  "pesoKg": 24.3,
+  "cargaMaxKg": 120,
+  "ruedaPulgadas": 10,
+  "tipoRueda": "tubeless",
+  "proteccionIP": "IPX5",
+  "plegable": true,
+  "suspension": "doble",
+  "frenos": "Tambor delantero y eléctrico trasero",
+  "pendienteMaxPct": 22,
+  "tiempoCargaH": 6,
+  "categorias": [
+    "urbano",
+    "larga-autonomia"
+  ],
+  "fuenteSpecs": "https://store-mx.segway.com/ninebot-kickscooter-max-g2",
+  "linkAfiliado": null,
+  "tipoVendedor": null,
+  "foto": null,
+  "activo": true
+}

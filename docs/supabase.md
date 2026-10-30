@@ -1,0 +1,117 @@
+# Configurar Supabase (precios, alertas y auditoría)
+
+Las especificaciones de los scooters viven en el repo (`src/content/scooters/`). En Supabase solo van
+los precios (con su historial), las alertas de precio y la auditoría. La web pública **no** consulta la
+base en vivo: lee la vista `precios_actuales` durante el build. Si faltan las variables o Supabase no
+responde, el build sigue y la web muestra "Precio pendiente".
+
+Seguridad: todo sigue [`docs/seguridad.md`](seguridad.md). Resumen de la migración
+[`supabase/migrations/0001_init.sql`](../supabase/migrations/0001_init.sql):
+
+| Tabla / vista | anon (web pública) | usuario autenticado | admin con MFA (`aal2`) | `functions/` (service key) |
+|---|---|---|---|---|
+| `precios` | leer | leer | leer, insertar, corregir, borrar | todo |
+| `precios_actuales` (vista) | leer | leer | leer | leer |
+| `alertas` | nada | nada | nada | todo |
+| `precios_ultimos_dos` (vista, 0002) y `registrar_avisos()` | nada | nada | nada | leer / ejecutar |
+| `auditoria` | nada | nada | nada | solo insertar y leer |
+
+## 1. Crear el proyecto (plan Free)
+
+1. Entra a [supabase.com](https://supabase.com) → **New project**. Plan **Free**.
+2. Región: la más cercana a México que ofrezca (por ejemplo, East US).
+3. Guarda la contraseña de la base en tu gestor de contraseñas. No va en el repo.
+
+## 2. Cerrar el registro público
+
+**Authentication → Sign In / Providers**:
+
+- Apaga **Allow new users to sign up**. Si queda encendido, cualquiera crea una cuenta y queda "autenticado".
+- Deja activado el proveedor **Email** (inicio de sesión por enlace mágico u OTP). Ningún otro proveedor.
+
+## 3. Aplicar la migración
+
+Aplica las migraciones en orden (`0001_init.sql`, `0002_alertas_avisos.sql`, …).
+
+Opción A (sin instalar nada): **SQL Editor → New query**, pega el contenido de
+`supabase/migrations/0001_init.sql` y pulsa **Run**.
+
+Opción B (CLI, deja registro de la migración):
+
+```bash
+npx supabase login
+npx supabase link --project-ref <ref-del-proyecto>
+npx supabase db push
+```
+
+Después, en **Project Settings → Data API**, confirma que el único esquema expuesto es `public`.
+
+## 4. Crear tu usuario y marcarlo como admin
+
+1. **Authentication → Users → Add user → Create new user** con tu email (el registro público está cerrado, así que se crea desde aquí).
+2. En **SQL Editor**, marca el rol en `app_metadata` (solo se puede editar desde el servidor; nunca uses `user_metadata`, que el usuario puede cambiar):
+
+   ```sql
+   update auth.users
+   set raw_app_meta_data = raw_app_meta_data || '{"role": "admin"}'
+   where email = 'tu-email@ejemplo.com';
+   ```
+
+3. Cierra sesión y vuelve a entrar: el rol viaja dentro del JWT y solo se actualiza al iniciar sesión.
+
+## 5. Activar MFA (obligatorio para escribir precios)
+
+1. **Authentication → Multi-Factor** (o **Sign In / Providers → Multi-Factor**): activa **TOTP (App Authenticator)**.
+2. Registra tu app de autenticación (Google Authenticator, 1Password, etc.) cuando el panel `/admin` lo pida.
+   Sin el segundo factor la sesión es `aal1` y las políticas rechazan cualquier escritura.
+
+## 5b. Inicio de sesión del panel `/admin`
+
+1. **Authentication → URL Configuration**: *Site URL* = `https://<tu-dominio>` y en *Redirect URLs* añade
+   `https://<tu-dominio>/admin/` (y la URL de *preview* de Cloudflare si vas a probar ahí).
+2. **Authentication → Emails → Magic Link**: añade el código a la plantilla para poder entrar desde el
+   celular aunque el correo se abra en otra app, por ejemplo `<p>Tu código: {{ .Token }}</p>`.
+3. Entra a `/admin`, pon tu correo y abre el enlace (en el mismo navegador) o escribe el código. La primera
+   vez el panel te pide dar de alta el TOTP con un QR; las siguientes, solo el código de 6 dígitos.
+4. Sin sesión `aal2` de admin el panel no muestra datos ni formularios. "Guardar" inserta una fila nueva en
+   `precios` (nunca la sobrescribe) y "Publicar" llama a `/api/publicar`, que comprueba origen, JWT,
+   `app_metadata.role = 'admin'` y `aal2`, deja registro en `auditoria` y dispara el deploy hook.
+
+## 6. Variables en Cloudflare Pages
+
+**Workers & Pages → tu proyecto → Settings → Variables and secrets**, en *Production* y *Preview*:
+
+| Variable | Dónde se saca | Tipo |
+|---|---|---|
+| `PUBLIC_SUPABASE_URL` | Project Settings → API → Project URL | Texto (es pública) |
+| `PUBLIC_SUPABASE_ANON_KEY` | Project Settings → API Keys → `anon` (o la *publishable key*) | Texto (es pública) |
+
+Y como **secretos** (tipo *Secret*, botón *Encrypt*), solo para `functions/api/publicar.ts`:
+
+| Secreto | Dónde se saca |
+|---|---|
+| `SUPABASE_SERVICE_ROLE_KEY` | Project Settings → API Keys → `service_role` (o la *secret key*) |
+| `CF_DEPLOY_HOOK_URL` | Cloudflare → tu proyecto → Settings → Builds → **Deploy hooks** → crea uno para la rama de producción |
+
+En local, copia `.env.example` a `.env` y rellénalo. La `service_role` key y el deploy hook **nunca**
+llevan prefijo `PUBLIC_` ni entran al repo (para `wrangler pages dev` van en `.dev.vars`, ignorado por git).
+
+## 7. Comprobar la seguridad
+
+- **Advisors → Security Advisor**: sin avisos de tablas sin RLS ni vistas inseguras.
+- Pruebas de RLS con pgTAP en `supabase/tests/database/rls.test.sql`. Necesitan Docker y la CLI:
+
+  ```bash
+  npx supabase init      # solo la primera vez, crea supabase/config.toml
+  npx supabase start
+  npx supabase test db
+  ```
+
+  Comprueban que anon no escribe ni lee alertas, que un usuario sin rol admin (o con un rol falso en
+  `user_metadata`) no escribe, que un admin sin MFA no escribe y que la auditoría no se puede borrar.
+
+## 8. Al activar Supabase en producción
+
+- `public/_headers`: añade `https://<proyecto>.supabase.co` a `connect-src` o el panel no podrá hablar con Supabase.
+- Cloudflare → **Security → WAF → Rate limiting rules** (plan Free, 1 regla): limita `/api/*`, por ejemplo
+  a 10 peticiones por minuto por IP.

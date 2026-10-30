@@ -1,0 +1,48 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import Icon from '../../components/Icon.astro';
+import { getCollection } from 'astro:content';
+import { CATEGORIAS_MEJORES, MEJORES } from '../../lib/mejores';
+
+const guias = (await getCollection('guias')).sort((a, b) => a.data.titulo.localeCompare(b.data.titulo, 'es'));
+---
+
+<Layout
+  title="Guías para elegir scooter eléctrico"
+  description="Guías para comprar un scooter eléctrico en México: cómo elegirlo, la autonomía real frente a la del fabricante y qué buscar si pesas más de 100 kg."
+>
+  <section class="container-page pt-10">
+    <p class="label">Antes de comprar</p>
+    <h1 class="slam mt-2 font-display text-[clamp(48px,9vw,120px)] leading-[0.88] tracking-[-0.04em] uppercase">Guías</h1>
+    <p class="mt-4 max-w-2xl text-lg text-pretty">Lo que conviene revisar antes de pagar, con los datos de nuestro catálogo.</p>
+
+    <ul class="mt-10 grid gap-5 md:grid-cols-3">
+      {
+        guias.map((g) => (
+          <li class="card card-lift relative flex flex-col p-6">
+            <h2 class="text-2xl font-bold text-balance">
+              <a href={`/guias/${g.id}`} class="after:absolute after:inset-0">{g.data.titulo}</a>
+            </h2>
+            <p class="mt-3 flex-1 text-muted">{g.data.descripcion}</p>
+            <Icon name="arrow" class="mt-4 size-5" />
+          </li>
+        ))
+      }
+    </ul>
+
+    <nav class="mt-16" aria-labelledby="rankings-title">
+      <h2 id="rankings-title" class="font-display text-[clamp(28px,4vw,44px)] leading-[0.95] tracking-[-0.03em] uppercase">
+        Rankings
+      </h2>
+      <ul class="mt-4 flex flex-wrap gap-2">
+        {
+          CATEGORIAS_MEJORES.map((c) => (
+            <li>
+              <a href={`/mejores/${c}`} class="btn btn-outline">{MEJORES[c].nombre}</a>
+            </li>
+          ))
+        }
+      </ul>
+    </nav>
+  </section>
+</Layout>

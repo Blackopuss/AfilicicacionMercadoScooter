@@ -12,13 +12,18 @@
     "astro": "astro",
     "check": "astro check",
     "test:ux": "playwright test",
-    "validate": "astro check && astro build && playwright test"
+    "validate": "astro check && vitest run --dir tests/unit && astro build && node scripts/check-csp.mjs && playwright test",
+    "test:unit": "vitest run --dir tests/unit",
+    "check:csp": "node scripts/check-csp.mjs"
   },
   "dependencies": {
+    "@astrojs/sitemap": "^3.7.4",
     "@fontsource-variable/archivo": "^5.3.0",
     "@fontsource/archivo-black": "^5.3.0",
+    "@supabase/supabase-js": "^2.118.0",
     "@tailwindcss/vite": "^4.3.3",
     "astro": "^7.4.4",
+    "maplibre-gl": "^6.16.0",
     "tailwindcss": "^4.3.3"
   },
   "devDependencies": {
@@ -26,6 +31,7 @@
     "@axe-core/playwright": "^4.14.0",
     "@playwright/test": "^1.64.1",
     "@types/node": "^24.19.2",
-    "typescript": "^6.0.3"
+    "typescript": "^6.0.3",
+    "vitest": "^5.0.5"
   }
 }

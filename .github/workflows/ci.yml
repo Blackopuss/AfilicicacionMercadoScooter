@@ -2,9 +2,9 @@ name: CI
 
 on:
   pull_request:
-    branches: [main]
+    branches: [main, desarrollo]
   push:
-    branches: [main]
+    branches: [main, desarrollo]
 
 permissions:
   contents: read
@@ -26,8 +26,12 @@ jobs:
       - run: npm ci
       - name: Type check
         run: npx astro check
+      - name: Unit tests (Vitest)
+        run: npm run test:unit
       - name: Build
         run: npm run build
+      - name: CSP allows every inline script
+        run: npm run check:csp
       - name: Install Chromium
         run: npx playwright install --with-deps chromium
       - name: UX and accessibility tests (Playwright + axe)

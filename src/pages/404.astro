@@ -1,0 +1,23 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Icon from '../components/Icon.astro';
+---
+
+<Layout title="Página no encontrada" description="Esta página no existe.">
+  <section class="container-page pt-12 pb-12 md:pt-16">
+    <p class="label">Error 404</p>
+    <h1 class="slam mt-4 font-display text-[clamp(56px,11vw,150px)] leading-[0.86] tracking-[-0.04em] uppercase">
+      Te saliste<br />de la<br /><span class="mt-2 inline-block bg-accent px-3 text-on-accent">ruta</span>
+    </h1>
+    <p class="slam mt-10 max-w-xl text-xl leading-relaxed text-pretty" style="--i:2">
+      Esta página no existe o cambió de lugar. Vuelve al inicio o compara los scooters que puedes comprar hoy.
+    </p>
+    <div class="slam mt-8 flex flex-wrap gap-3" style="--i:3">
+      <a href="/" class="btn btn-ink">
+        Ir al inicio
+        <Icon name="arrow" class="size-4" />
+      </a>
+      <a href="/comparar" class="btn btn-outline">Comparar modelos</a>
+    </div>
+  </section>
+</Layout>

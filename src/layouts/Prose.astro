@@ -1,0 +1,28 @@
+---
+// Long-form text pages (legal, transparency): readable measure and Asfalto headings.
+import Layout, { type Props as LayoutProps } from './Layout.astro';
+
+interface Props extends Pick<LayoutProps, 'migas' | 'jsonLd'> {
+  title: string;
+  description: string;
+  label: string;
+  updated: string; // YYYY-MM-DD
+}
+const { title, description, label, updated, ...seo } = Astro.props;
+const updatedText = new Date(updated).toLocaleDateString('es-MX', { dateStyle: 'long', timeZone: 'UTC' });
+---
+
+<Layout title={title} description={description} {...seo}>
+  <article class="container-page pt-12 md:pt-16">
+    <p class="label">{label}</p>
+    <h1 class="slam mt-4 font-display text-[clamp(40px,9vw,104px)] leading-[0.9] tracking-[-0.04em] text-balance uppercase">
+      {title}
+    </h1>
+    <p class="mt-6 text-muted">Última actualización: <time datetime={updated}>{updatedText}</time></p>
+    <div
+      class="mt-10 max-w-[70ch] border-t-2 border-line text-lg leading-relaxed [&_a]:font-semibold [&_a]:underline [&_a]:underline-offset-4 [&_h2]:mt-12 [&_h2]:font-display [&_h2]:text-[clamp(26px,4vw,40px)] [&_h2]:leading-[0.95] [&_h2]:tracking-[-0.03em] [&_h2]:uppercase [&_li]:mt-2 [&_p]:mt-4 [&_ul]:mt-4 [&_ul]:list-disc [&_ul]:pl-6"
+    >
+      <slot />
+    </div>
+  </article>
+</Layout>

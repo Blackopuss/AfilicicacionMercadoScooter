@@ -1,0 +1,28 @@
+{
+  "marca": "Xiaomi",
+  "modelo": "Electric Scooter Elite",
+  "autonomiaFabricanteKm": 45,
+  "velocidadMaxKmh": 32,
+  "potenciaW": 400,
+  "potenciaPicoW": 700,
+  "bateriaWh": 360,
+  "voltajeV": null,
+  "pesoKg": 20,
+  "cargaMaxKg": 120,
+  "ruedaPulgadas": 10,
+  "tipoRueda": "tubeless",
+  "proteccionIP": "IPX5",
+  "plegable": true,
+  "suspension": "delantera",
+  "frenos": "Tambor delantero y E-ABS trasero",
+  "pendienteMaxPct": 20,
+  "tiempoCargaH": 8,
+  "categorias": [
+    "urbano"
+  ],
+  "fuenteSpecs": "https://www.mi.com/mx/product/xiaomi-electric-scooter-elite/specs/",
+  "linkAfiliado": null,
+  "tipoVendedor": null,
+  "foto": null,
+  "activo": true
+}
