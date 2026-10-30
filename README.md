@@ -6,8 +6,8 @@ Afiliados de Mercado Libre. Plan completo: [PLAN.md](PLAN.md). Diseño: [design-
 
 ## Stack
 
-Astro 7 + Tailwind CSS 4, desplegado en Cloudflare Pages. Más adelante: Supabase (panel e historial),
-MapLibre (mapa) y Brevo (alertas).
+Astro 7 + Tailwind CSS 4, desplegado en Cloudflare Pages. Specs de scooters en `src/content/scooters/`;
+precios en Supabase ([docs/supabase.md](docs/supabase.md)). Más adelante: MapLibre (mapa) y Brevo (alertas).
 
 ## Comandos
 
@@ -17,6 +17,7 @@ MapLibre (mapa) y Brevo (alertas).
 | `npm run dev` | Servidor local en `localhost:4321` |
 | `npm run build` | Build de producción en `dist/` |
 | `npm run check` | Revisión de tipos (`astro check`) |
+| `npm run test:unit` | Pruebas unitarias de `src/lib` (Vitest) |
 | `npm run test:ux` | Pruebas UX y accesibilidad (requiere `npx playwright install chromium` la primera vez) |
 | `npm run validate` | Todo lo anterior, igual que el CI |
 

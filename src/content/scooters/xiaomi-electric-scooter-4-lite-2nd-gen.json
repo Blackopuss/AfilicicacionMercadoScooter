@@ -1,0 +1,29 @@
+{
+  "marca": "Xiaomi",
+  "modelo": "Electric Scooter 4 Lite (2nd Gen)",
+  "autonomiaFabricanteKm": 24,
+  "velocidadMaxKmh": 24,
+  "potenciaW": 300,
+  "potenciaPicoW": 500,
+  "bateriaWh": 221,
+  "voltajeV": null,
+  "pesoKg": 16.2,
+  "cargaMaxKg": 100,
+  "ruedaPulgadas": 10,
+  "tipoRueda": "neumatica",
+  "proteccionIP": "IPX4",
+  "plegable": true,
+  "suspension": "ninguna",
+  "frenos": "Tambor delantero y E-ABS trasero",
+  "pendienteMaxPct": 15,
+  "tiempoCargaH": 8,
+  "categorias": [
+    "urbano",
+    "plegable"
+  ],
+  "fuenteSpecs": "https://www.mi.com/mx/product/xiaomi-electric-scooter-4-lite-2nd-gen/specs/",
+  "linkAfiliado": null,
+  "tipoVendedor": null,
+  "foto": null,
+  "activo": true
+}

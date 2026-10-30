@@ -1,0 +1,28 @@
+{
+  "marca": "KuKirin",
+  "modelo": "G2",
+  "autonomiaFabricanteKm": 55,
+  "velocidadMaxKmh": 45,
+  "potenciaW": 800,
+  "potenciaPicoW": null,
+  "bateriaWh": null,
+  "voltajeV": 48,
+  "pesoKg": 25.3,
+  "cargaMaxKg": 120,
+  "ruedaPulgadas": 10,
+  "tipoRueda": "tubeless",
+  "proteccionIP": "IP54",
+  "plegable": true,
+  "suspension": "doble",
+  "frenos": "Disco delantero y trasero",
+  "pendienteMaxPct": null,
+  "tiempoCargaH": 9,
+  "categorias": [
+    "todoterreno"
+  ],
+  "fuenteSpecs": "https://www.kukirin-scooter.com/products/kukirin-g2-electric-scooter",
+  "linkAfiliado": null,
+  "tipoVendedor": null,
+  "foto": null,
+  "activo": true
+}
