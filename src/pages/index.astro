@@ -87,15 +87,15 @@ const bars = [
 
   <!-- Features -->
   <section class="container-page pt-20" aria-labelledby="features-title">
-    <div class="flex flex-wrap items-end justify-between gap-4 border-b-2 border-line pb-4">
+    <div class="reveal flex flex-wrap items-end justify-between gap-4 border-b-2 border-line pb-4" data-reveal>
       <h2 id="features-title" class="font-display text-[clamp(36px,5vw,64px)] leading-[0.9] tracking-[-0.03em] uppercase">
         Lo que el folleto no te dice
       </h2>
       <p class="font-semibold">Seis razones para comparar aquí</p>
     </div>
-    <ul class="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+    <ul class="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3" data-reveal>
       {features.map((f, i) => (
-        <li class="card card-lift p-6">
+        <li class="reveal card card-lift p-6" style={`--i:${i}`}>
           <p class="overflow-hidden font-display text-7xl leading-none">
             <span class="rise-num" style={`--i:${i}`}>{String(i + 1).padStart(2, '0')}</span>
           </p>
@@ -108,15 +108,15 @@ const bars = [
 
   <!-- Top 3 por puntuación -->
   <section class="container-page pt-20" aria-labelledby="top-title">
-    <div class="flex flex-wrap items-end justify-between gap-4 border-b-2 border-line pb-4">
+    <div class="reveal flex flex-wrap items-end justify-between gap-4 border-b-2 border-line pb-4" data-reveal>
       <h2 id="top-title" class="font-display text-[clamp(36px,5vw,64px)] leading-[0.9] tracking-[-0.03em] uppercase">
         El top de hoy
       </h2>
       <a href="/como-puntuamos" class="inline-flex min-h-11 items-center font-semibold underline underline-offset-4">Cómo puntuamos</a>
     </div>
-    <ol class="mt-8 grid gap-5 md:grid-cols-3">
+    <ol class="mt-8 grid gap-5 md:grid-cols-3" data-reveal>
       {top.map((s, i) => (
-        <li class="card card-lift relative p-6">
+        <li class="reveal card card-lift relative p-6" style={`--i:${i}`}>
           <p class="overflow-hidden font-display text-7xl leading-none">
             <span class="rise-num" style={`--i:${i}`}>{String(i + 1).padStart(2, '0')}</span>
           </p>
@@ -131,8 +131,8 @@ const bars = [
   </section>
 
   <!-- Real range -->
-  <section class="container-page mt-24 flex flex-wrap gap-10">
-    <div class="min-w-0 flex-[1_1_420px]">
+  <section class="container-page mt-24 flex flex-wrap gap-10" data-reveal>
+    <div class="reveal min-w-0 flex-[1_1_420px]">
       <h2 class="font-display text-[clamp(36px,5vw,64px)] leading-[0.9] tracking-[-0.03em] uppercase">
         El folleto promete.<br /><span class="text-accent-ink">La calle decide.</span>
       </h2>
@@ -141,7 +141,7 @@ const bars = [
         compres.
       </p>
     </div>
-    <div class="card flex min-w-0 flex-[1_1_380px] flex-col gap-5 p-6" role="img" aria-label="Ejemplo: la autonomía real es menor que la del folleto">
+    <div class="reveal card flex min-w-0 flex-[1_1_380px] flex-col gap-5 p-6" style="--i:1" role="img" aria-label="Ejemplo: la autonomía real es menor que la del folleto">
       {bars.map((b, i) => (
         <div>
           <p class="label">{b.label}</p>
@@ -154,8 +154,8 @@ const bars = [
   </section>
 
   <!-- Final CTA -->
-  <section class="container-page mt-24">
-    <div class="flex flex-wrap items-center justify-between gap-6 border-2 border-line bg-accent p-8 text-on-accent md:p-12">
+  <section class="container-page mt-24" data-reveal>
+    <div class="reveal flex flex-wrap items-center justify-between gap-6 border-2 border-line bg-accent p-8 text-on-accent md:p-12">
       <h2 class="max-w-2xl font-display text-[clamp(30px,4.5vw,56px)] leading-[0.95] uppercase">
         ¿No sabes cuál? Te lo decimos en un minuto.
       </h2>
@@ -166,3 +166,18 @@ const bars = [
     </div>
   </section>
 </Layout>
+
+<script>
+  // Play each [data-reveal] block's animations when it scrolls into view, not on load (global.css pauses them until then).
+  const io = new IntersectionObserver(
+    (entries) => {
+      for (const e of entries) {
+        if (!e.isIntersecting) continue;
+        e.target.classList.add('is-visible');
+        io.unobserve(e.target);
+      }
+    },
+    { rootMargin: '0px 0px -15% 0px' },
+  );
+  document.querySelectorAll('[data-reveal]').forEach((el) => io.observe(el));
+</script>
