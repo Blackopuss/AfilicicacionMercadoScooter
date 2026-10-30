@@ -95,6 +95,8 @@ Si una skill de la tabla no está instalada, sigue sin ella y dilo.
 
 ## 7. Git
 
-- `main` = producción. Solo entra por Pull Request con el CI en verde. Nunca push directo, nunca force push.
-- Una rama `feat/*` por función, creada desde `main` (tabla y dependencias en `README.md`). Cambios de configuración o documentación: `chore/*`.
+- Flujo: `feat/*` → PR a **`desarrollo`** (integración) → el dueño abre el PR `desarrollo` → `main` (producción). Ninguna sesión abre PRs ni hace merge hacia `main`.
+- `main` y `desarrollo` están protegidas: solo entran por Pull Request con el CI en verde. Nunca push directo, nunca force push.
+- Una rama `feat/*` por función (tabla y dependencias en `README.md`). Antes de abrir el PR, actualiza tu rama con `desarrollo` y resuelve conflictos. Cambios de configuración o documentación: `chore/*`.
+- `gh` está en `C:\Program Files\GitHub CLI\gh.exe` (añádelo al PATH si no lo encuentra).
 - Commits pequeños y descriptivos en español.

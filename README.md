@@ -22,8 +22,11 @@ MapLibre (mapa) y Brevo (alertas).
 
 ## Ramas
 
-- **`main`** = producción. Lo que entra a `main` se despliega. Nadie hace push directo: todo entra por Pull Request con el CI en verde.
-- **`feat/*`** = una rama por función, creada desde `main`. Al terminar se abre un PR hacia `main`.
+- **`main`** = producción. Lo que entra a `main` se despliega. Solo recibe el PR `desarrollo` → `main`, que abre el dueño del proyecto.
+- **`desarrollo`** = integración. Aquí se unen las funciones terminadas y se prueba todo junto.
+- **`feat/*`** = una rama por función. Al terminar se abre un PR hacia `desarrollo`.
+
+Las dos ramas protegidas (`main` y `desarrollo`) solo aceptan Pull Requests con el CI en verde.
 
 | Rama | Función | Depende de |
 |---|---|---|
@@ -36,7 +39,7 @@ MapLibre (mapa) y Brevo (alertas).
 | `feat/guias-seo` | Guías, páginas "A vs B", `/mejores/[categoria]`, sitemap | `feat/comparador-fichas` |
 | `feat/paginas-legales` | Aviso de privacidad, cómo ganamos dinero, cómo puntuamos | — |
 
-Cuando una rama depende de otra, se fusiona primero la base y luego se actualiza la dependiente con `main`.
+Cuando una rama depende de otra, se fusiona primero la base en `desarrollo` y luego se actualiza la dependiente con `desarrollo`.
 
 ## Validaciones automáticas (en cada PR y en `main`)
 
