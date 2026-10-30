@@ -7,13 +7,13 @@ export const ETIQUETA_CATEGORIA: Record<Categoria, string> = {
   plegable: 'Plegable',
   'larga-autonomia': 'Larga autonomía',
 };
-const ETIQUETA_SUSPENSION: Record<Scooter['suspension'], string> = {
+export const ETIQUETA_SUSPENSION: Record<Scooter['suspension'], string> = {
   ninguna: 'Sin suspensión',
   delantera: 'Delantera',
   trasera: 'Trasera',
   doble: 'Doble',
 };
-const ETIQUETA_RUEDA: Record<Scooter['tipoRueda'], string> = {
+export const ETIQUETA_RUEDA: Record<Scooter['tipoRueda'], string> = {
   neumatica: 'Neumática',
   solida: 'Sólida',
   tubeless: 'Tubeless',

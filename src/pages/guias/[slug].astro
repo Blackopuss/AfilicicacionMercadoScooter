@@ -1,0 +1,75 @@
+---
+import Prose from '../../layouts/Prose.astro';
+import Precio from '../../components/Precio.astro';
+import { getCollection, render, type CollectionEntry } from 'astro:content';
+import { SITE } from '../../config';
+import { getCatalogo } from '../../lib/coleccion';
+import { MEJORES, ranking } from '../../lib/mejores';
+
+export async function getStaticPaths() {
+  const guias = await getCollection('guias');
+  return guias.map((guia) => ({ params: { slug: guia.id }, props: { guia } }));
+}
+
+interface Props {
+  guia: CollectionEntry<'guias'>;
+}
+const { guia } = Astro.props;
+const { titulo, descripcion, mejores } = guia.data;
+const [publicada, actualizada] = [guia.data.publicada, guia.data.actualizada].map((d) => d.toISOString().slice(0, 10));
+const { Content } = await render(guia);
+const top = mejores ? ranking(mejores, await getCatalogo()).slice(0, 3) : [];
+const ruta = `/guias/${guia.id}`;
+const autor = { '@type': 'Organization', name: SITE.name, url: new URL('/', Astro.site).href };
+---
+
+<Prose
+  title={titulo}
+  description={descripcion}
+  label="Guía"
+  updated={actualizada}
+  migas={[{ nombre: 'Guías', ruta: '/guias' }, { nombre: titulo, ruta }]}
+  jsonLd={[
+    {
+      '@context': 'https://schema.org',
+      '@type': 'Article',
+      headline: titulo,
+      description: descripcion,
+      inLanguage: 'es-MX',
+      datePublished: publicada,
+      dateModified: actualizada,
+      image: new URL('/og.png', Astro.site).href,
+      author: autor,
+      publisher: autor,
+      mainEntityOfPage: new URL(`${ruta}/`, Astro.site).href,
+    },
+  ]}
+>
+  <Content />
+  {
+    mejores && (
+      <section aria-labelledby="top-title">
+        <h2 id="top-title">{MEJORES[mejores].titulo}: los 3 primeros</h2>
+        <ol class="mt-6 grid gap-4">
+          {top.map((s, i) => (
+            <li class="card p-5">
+              <p class="label">
+                {i + 1}. {s.marca}
+              </p>
+              <p class="mt-1 text-xl font-bold">
+                <a href={`/scooter/${s.slug}`}>{s.modelo}</a> · <span class="tabular-nums">{s.puntuacion}/100</span>
+              </p>
+              <p class="mt-1 text-base text-muted">
+                {MEJORES[mejores].dato.etiqueta}: {MEJORES[mejores].dato.texto(s)}
+              </p>
+              <Precio precio={s.precio} class="text-lg" />
+            </li>
+          ))}
+        </ol>
+        <p>
+          <a href={`/mejores/${mejores}`}>Ver el ranking completo</a>
+        </p>
+      </section>
+    )
+  }
+</Prose>

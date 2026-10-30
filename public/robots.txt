@@ -1,5 +1,0 @@
-User-agent: *
-Disallow: /admin
-
-# Cambia [DOMINIO] por el dominio real al desplegar.
-Sitemap: https://[DOMINIO]/sitemap-index.xml
