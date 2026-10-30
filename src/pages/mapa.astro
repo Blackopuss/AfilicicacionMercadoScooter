@@ -1,0 +1,304 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Icon from '../components/Icon.astro';
+import { autonomiaReal } from '../lib/autonomia';
+import { getScooters } from '../lib/coleccion';
+
+const scooters = (await getScooters())
+  .map((s) => ({ ...s, real: autonomiaReal(s) }))
+  .sort((a, b) => b.real - a.real);
+const campo = 'min-h-12 w-full border-2 border-line bg-surface px-3 text-base text-fg';
+---
+
+<Layout
+  title="Mapa: ¿llegas o no?"
+  description="Pon tu ruta en bici o los km de tu trayecto y ve qué scooters eléctricos llegan, con su autonomía real según tu peso y las subidas."
+>
+  <section class="container-page pt-12">
+    <p class="label">Mapa de autonomía</p>
+    <h1 class="slam mt-4 font-display text-[clamp(44px,8vw,96px)] leading-[0.9] tracking-[-0.04em] uppercase">
+      ¿Llegas <span class="bg-accent px-2 text-on-accent">o no?</span>
+    </h1>
+    <p class="mt-6 max-w-2xl text-lg text-pretty">
+      Pon de dónde sales y a dónde vas. Calculamos la ruta en bici y te decimos cuánta batería le sobra a cada scooter,
+      con su autonomía real (no la del folleto).
+    </p>
+  </section>
+
+  <section class="container-page mt-10 grid gap-6 lg:grid-cols-[minmax(0,2fr)_minmax(0,3fr)]">
+    <div class="flex min-w-0 flex-col gap-6">
+      <form id="form-ruta" class="card flex flex-col gap-4 p-5" novalidate>
+        <h2 class="font-display text-2xl uppercase">Tu ruta</h2>
+        <div>
+          <label for="desde" class="label">Desde</label>
+          <input id="desde" name="desde" list="sug-desde" autocomplete="off" maxlength="120" required placeholder="Calle, colonia o lugar" class={`${campo} mt-1`} />
+          <datalist id="sug-desde"></datalist>
+        </div>
+        <div>
+          <label for="hasta" class="label">Hasta</label>
+          <input id="hasta" name="hasta" list="sug-hasta" autocomplete="off" maxlength="120" required placeholder="Calle, colonia o lugar" class={`${campo} mt-1`} />
+          <datalist id="sug-hasta"></datalist>
+        </div>
+        <button type="submit" class="btn btn-ink"><Icon name="map" class="size-5" />Calcular ruta</button>
+        <p id="estado-ruta" class="text-sm text-muted" aria-live="polite"></p>
+      </form>
+
+      <form id="form-km" class="card flex flex-col gap-4 p-5" novalidate>
+        <h2 class="font-display text-2xl uppercase">¿Ya sabes los km?</h2>
+        <div>
+          <label for="km" class="label">Km por trayecto</label>
+          <input id="km" name="km" type="number" inputmode="decimal" min="0.1" max="500" step="0.1" required class={`${campo} mt-1`} />
+        </div>
+        <button type="submit" class="btn btn-outline">Calcular con mis km</button>
+        <p id="estado-km" class="text-sm text-bad" aria-live="polite"></p>
+      </form>
+
+      <fieldset class="card flex flex-col gap-4 p-5">
+        <legend class="sr-only">Tú y tu trayecto</legend>
+        <p class="font-display text-2xl uppercase" aria-hidden="true">Tú y tu trayecto</p>
+        <div>
+          <label for="peso" class="label">Tu peso (kg)</label>
+          <input id="peso" name="peso" type="number" inputmode="numeric" min="30" max="200" step="1" value="75" class={`${campo} mt-1`} />
+        </div>
+        <label class="flex min-h-11 cursor-pointer items-center gap-3 font-semibold">
+          <input id="subidas" type="checkbox" class="size-5 accent-[var(--accent-ink)]" />
+          Con subidas
+        </label>
+        <label class="flex min-h-11 cursor-pointer items-center gap-3 font-semibold">
+          <input id="vuelta" type="checkbox" class="size-5 accent-[var(--accent-ink)]" />
+          Ida y vuelta sin cargar
+        </label>
+      </fieldset>
+    </div>
+
+    <div class="min-w-0">
+      <div id="mapa" class="grid h-80 place-items-center border-2 border-line bg-surface-2 md:h-[30rem]">
+        <p id="mapa-vacio" class="max-w-xs p-6 text-center text-muted">Aquí aparece tu ruta. La lista de abajo tiene el mismo resultado en texto.</p>
+      </div>
+      <p class="mt-2 text-xs text-muted">
+        Mapa: <a href="https://openfreemap.org" class="underline">OpenFreeMap</a> ©
+        <a href="https://www.openmaptiles.org/" class="underline">OpenMapTiles</a>, datos ©
+        <a href="https://www.openstreetmap.org/copyright" class="underline">colaboradores de OpenStreetMap</a>. Rutas en bici:
+        Mapbox.
+      </p>
+    </div>
+  </section>
+
+  <section class="container-page mt-14" aria-labelledby="resultado-titulo">
+    <h2 id="resultado-titulo" class="font-display text-[clamp(32px,5vw,56px)] leading-[0.95] tracking-[-0.03em] uppercase">
+      ¿Qué scooters llegan?
+    </h2>
+    <p id="resumen" class="mt-3 text-lg" aria-live="polite">Pon tu ruta o tus km para ver cuáles llegan.</p>
+    <p class="mt-1 text-sm text-muted">
+      Autonomía real: la del fabricante con tráfico de ciudad, ajustada a tu peso y a las subidas.
+    </p>
+
+    <ol id="lista" class="mt-6 grid gap-3 md:grid-cols-2">
+      {scooters.map((s) => (
+        <li class="card flex flex-col gap-2 p-4" data-fab={s.autonomiaFabricanteKm} data-peso={s.pesoKg}>
+          <a href={`/scooter/${s.slug}`} class="inline-flex min-h-11 items-center text-lg font-bold underline-offset-4 hover:underline">
+            {s.marca} {s.modelo}
+          </a>
+          <p class="text-sm text-muted">Autonomía real: <span data-real>{s.real}</span> km</p>
+          <p data-veredicto class="font-bold text-muted">Sin trayecto todavía</p>
+          <div class="h-2 bg-surface-2" aria-hidden="true"><div data-barra class="h-full w-0 bg-good"></div></div>
+        </li>
+      ))}
+    </ol>
+  </section>
+</Layout>
+
+<script>
+  import { autonomiaReal } from '../lib/autonomia';
+  import { alcance, type Punto } from '../lib/mapa';
+  import type { Feature, LineString } from 'geojson';
+  import type { GeoJSONSource, Map as Mapa } from 'maplibre-gl';
+  import workerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?url';
+
+  const $ = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
+  const formRuta = $<HTMLFormElement>('form-ruta');
+  const formKm = $<HTMLFormElement>('form-km');
+  const estadoRuta = $('estado-ruta');
+  const estadoKm = $('estado-km');
+  const km = $<HTMLInputElement>('km');
+  const peso = $<HTMLInputElement>('peso');
+  const subidas = $<HTMLInputElement>('subidas');
+  const vuelta = $<HTMLInputElement>('vuelta');
+  const resumen = $('resumen');
+  const lista = $<HTMLOListElement>('lista');
+  const fmt = (n: number) => n.toLocaleString('es-MX', { maximumFractionDigits: 1 });
+
+  let trayectoKm: number | null = null;
+
+  // Pinta la lista: la alternativa en texto al mapa.
+  function pintar() {
+    const p = Number(peso.value);
+    const pesoKg = p >= 30 && p <= 200 ? p : 75;
+    const distancia = trayectoKm === null ? null : trayectoKm * (vuelta.checked ? 2 : 1);
+    const items = [...lista.querySelectorAll<HTMLLIElement>('li')].map((li) => {
+      const real = autonomiaReal(
+        { autonomiaFabricanteKm: Number(li.dataset.fab), pesoKg: Number(li.dataset.peso) },
+        { pesoKg, conSubidas: subidas.checked },
+      );
+      li.querySelector('[data-real]')!.textContent = String(real);
+      const veredicto = li.querySelector<HTMLElement>('[data-veredicto]')!;
+      const barra = li.querySelector<HTMLElement>('[data-barra]')!;
+      if (distancia === null) return { li, orden: real, llega: false };
+      const a = alcance(real, distancia);
+      veredicto.textContent = a.llega
+        ? `Llega: le sobra ${a.sobraPct} % de batería`
+        : `No llega: le faltan ${fmt(-a.sobraKm)} km`;
+      veredicto.className = `font-bold ${a.llega ? 'text-good' : 'text-bad'}`;
+      barra.style.width = `${a.sobraPct}%`;
+      return { li, orden: a.sobraKm, llega: a.llega };
+    });
+    items.sort((a, b) => b.orden - a.orden).forEach(({ li }) => lista.append(li));
+    if (distancia !== null) {
+      const llegan = items.filter((i) => i.llega).length;
+      resumen.textContent = `Trayecto de ${fmt(distancia)} km${vuelta.checked ? ' (ida y vuelta)' : ''}: llegan ${llegan} de ${items.length} scooters.`;
+    }
+  }
+  [peso, subidas, vuelta].forEach((el) => el.addEventListener('input', pintar));
+
+  formKm.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const v = Number(km.value);
+    if (!(v > 0 && v <= 500)) {
+      estadoKm.textContent = 'Escribe una distancia entre 0.1 y 500 km.';
+      km.focus();
+      return;
+    }
+    estadoKm.textContent = '';
+    trayectoKm = v;
+    pintar();
+  });
+
+  // --- Ruta con la API (functions/api). Si no está disponible, se manda a la gente al cálculo por km. ---
+  class SinServicio extends Error {}
+  async function api<T>(ruta: string): Promise<T> {
+    let res: Response;
+    try {
+      res = await fetch(ruta, { headers: { Accept: 'application/json' } });
+    } catch {
+      throw new SinServicio();
+    }
+    const data = await res.json().catch(() => null);
+    if (res.status === 503 || !data) throw new SinServicio();
+    if (!res.ok) throw new Error(data.error ?? 'No se pudo calcular la ruta.');
+    return data as T;
+  }
+
+  function sinServicio() {
+    estadoRuta.textContent = 'El cálculo de rutas no está disponible ahora. Escribe los km de tu trayecto aquí abajo.';
+    km.focus();
+  }
+
+  type Lugar = Punto & { nombre: string };
+  const lugares = new Map<string, Lugar>();
+  const buscar = async (q: string) => {
+    const { lugares: encontrados } = await api<{ lugares: Lugar[] }>(`/api/geocode?q=${encodeURIComponent(q)}`);
+    encontrados.forEach((l) => lugares.set(l.nombre, l));
+    return encontrados;
+  };
+
+  for (const id of ['desde', 'hasta']) {
+    const input = $<HTMLInputElement>(id);
+    const datalist = $(`sug-${id}`);
+    let espera: ReturnType<typeof setTimeout>;
+    input.addEventListener('input', () => {
+      clearTimeout(espera);
+      const q = input.value.trim();
+      if (q.length < 3 || lugares.has(q)) return;
+      // Cada tecla cuenta como una petición en Mapbox: se espera a que la persona deje de escribir.
+      espera = setTimeout(async () => {
+        try {
+          const opciones = (await buscar(q)).map((l) => Object.assign(document.createElement('option'), { value: l.nombre }));
+          datalist.replaceChildren(...opciones);
+        } catch {
+          /* las sugerencias son opcionales; el envío del formulario avisa si el servicio falla */
+        }
+      }, 400);
+    });
+  }
+
+  async function resolver(texto: string): Promise<Lugar> {
+    const q = texto.trim();
+    const conocido = lugares.get(q);
+    if (conocido) return conocido;
+    if (q.length < 3) throw new Error('Escribe al menos 3 letras en Desde y Hasta.');
+    const [primero] = await buscar(q);
+    if (!primero) throw new Error(`No encontramos “${q.slice(0, 60)}” en México.`);
+    return primero;
+  }
+
+  formRuta.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const boton = formRuta.querySelector('button')!;
+    boton.disabled = true;
+    estadoRuta.textContent = 'Calculando la ruta…';
+    try {
+      const desde = await resolver($<HTMLInputElement>('desde').value);
+      const hasta = await resolver($<HTMLInputElement>('hasta').value);
+      const r = await api<{ distanciaKm: number; duracionMin: number; geometria: LineString }>(
+        `/api/ruta?desde=${desde.lon},${desde.lat}&hasta=${hasta.lon},${hasta.lat}`,
+      );
+      trayectoKm = r.distanciaKm;
+      km.value = String(r.distanciaKm);
+      estadoRuta.textContent = `Ruta en bici: ${fmt(r.distanciaKm)} km, unos ${r.duracionMin} min en bici.`;
+      pintar();
+      dibujar(r.geometria).catch(() => {
+        $('mapa-vacio').textContent = 'No pudimos cargar el mapa. El resultado está en la lista de abajo.';
+      });
+    } catch (err) {
+      if (err instanceof SinServicio) sinServicio();
+      else estadoRuta.textContent = (err as Error).message;
+    } finally {
+      boton.disabled = false;
+    }
+  });
+
+  // --- Mapa: MapLibre se descarga solo cuando hay una ruta que dibujar. ---
+  let mapa: Mapa | undefined;
+  async function dibujar(linea: LineString) {
+    if (!mapa) {
+      const [ml] = await Promise.all([import('maplibre-gl'), import('maplibre-gl/dist/maplibre-gl.css')]);
+      ml.setWorkerUrl(workerUrl);
+      const contenedor = $('mapa');
+      contenedor.replaceChildren();
+      contenedor.className = 'h-80 border-2 border-line md:h-[30rem]';
+      mapa = new ml.Map({
+        container: contenedor,
+        style: 'https://tiles.openfreemap.org/styles/liberty',
+        attributionControl: false, // la atribución va en texto bajo el mapa
+        cooperativeGestures: true,
+        locale: {
+          'Map.Title': 'Mapa con la ruta en bici. La lista de scooters tiene el resultado en texto.',
+          'CooperativeGesturesHandler.WindowsHelpText': 'Usa Ctrl + rueda para hacer zoom',
+          'CooperativeGesturesHandler.MacHelpText': 'Usa ⌘ + rueda para hacer zoom',
+          'CooperativeGesturesHandler.MobileHelpText': 'Usa dos dedos para mover el mapa',
+        },
+      });
+      await mapa.once('load');
+    }
+    const datos: Feature = { type: 'Feature', properties: {}, geometry: linea };
+    const fuente = mapa.getSource<GeoJSONSource>('ruta');
+    if (fuente) fuente.setData(datos);
+    else {
+      mapa.addSource('ruta', { type: 'geojson', data: datos });
+      mapa.addLayer({
+        id: 'ruta',
+        type: 'line',
+        source: 'ruta',
+        layout: { 'line-cap': 'round', 'line-join': 'round' },
+        // MapLibre no lee variables CSS: se toma el valor del token.
+        paint: { 'line-color': getComputedStyle(document.documentElement).getPropertyValue('--accent-ink').trim(), 'line-width': 5 },
+      });
+    }
+    const [x0, y0] = linea.coordinates[0];
+    const caja = linea.coordinates.reduce(
+      ([o, s, e, n], [x, y]) => [Math.min(o, x), Math.min(s, y), Math.max(e, x), Math.max(n, y)],
+      [x0, y0, x0, y0],
+    );
+    mapa.fitBounds(caja as [number, number, number, number], { padding: 40, duration: 0 });
+  }
+</script>

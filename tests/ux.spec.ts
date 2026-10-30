@@ -11,6 +11,7 @@ const PAGES = [
   '/admin',
   '/quiz',
   '/quiz?d=10&p=75&b=sin&s=0&c=1',
+  '/mapa',
   '/comparar',
   '/como-puntuamos',
   '/scooter/xiaomi-electric-scooter-5',

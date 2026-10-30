@@ -73,7 +73,11 @@ Archivo `public/_headers` de Cloudflare Pages (ya creado; esta es la plantilla):
   Cache-Control: no-store
 ```
 
-El CSP se ajusta cuando entren el mapa (tiles), Brevo o Turnstile: añadir solo los dominios exactos.
+El CSP se ajusta cuando entren Brevo o Turnstile: añadir solo los dominios exactos.
+El mapa (`/mapa`, ver `docs/mapa.md`) ya está dentro: `connect-src` añade `https://tiles.openfreemap.org` (estilo,
+tiles, sprites y fuentes) e `img-src` añade `blob:` (MapLibre puede pintar imágenes desde blobs). El worker de
+MapLibre se sirve desde `/_astro/` (mismo origen) con `setWorkerUrl`, así que no hace falta `worker-src blob:`.
+Las rutas pasan por `/api/*` (mismo origen): el navegador nunca habla con Mapbox.
 Cloudflare Web Analytics inyecta su propio script: al activarlo, añadir `https://static.cloudflareinsights.com`
 a `script-src` y `https://cloudflareinsights.com` a `connect-src`.
 
