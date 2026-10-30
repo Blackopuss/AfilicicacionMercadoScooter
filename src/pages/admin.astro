@@ -1,0 +1,24 @@
+---
+import Layout from '../layouts/Layout.astro';
+import PanelAdmin from '../components/PanelAdmin.astro';
+import { getScooters } from '../lib/coleccion';
+
+// Panel privado: todo lo que hay aquí es público y manipulable; la seguridad vive en RLS y en functions/ (docs/seguridad.md).
+const configurado = Boolean(import.meta.env.PUBLIC_SUPABASE_URL && import.meta.env.PUBLIC_SUPABASE_ANON_KEY);
+const scooters = configurado ? await getScooters() : [];
+---
+
+<Layout title="Panel" description="Panel privado de precios." noindex>
+  <section class="container-page pt-10 pb-12 md:pt-14">
+    <p class="label">Panel privado</p>
+    <h1 class="mt-3 font-display text-[clamp(44px,9vw,96px)] leading-[0.9] tracking-[-0.03em] uppercase">Precios de hoy</h1>
+
+    {
+      !configurado ? (
+        <p class="card mt-8 max-w-xl p-6 text-lg">Configura Supabase (ver docs/supabase.md).</p>
+      ) : (
+        <PanelAdmin scooters={scooters} />
+      )
+    }
+  </section>
+</Layout>

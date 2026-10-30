@@ -31,3 +31,10 @@ export async function getPreciosActuales(env: Env = import.meta.env): Promise<Ma
   }
   return precios;
 }
+
+export const PRECIO_MAX = 200_000;
+
+/** Precio capturable en /admin: entero en pesos de 1 a 200 000 (el mismo check que la tabla precios). */
+export function esPrecioValido(mxn: number): boolean {
+  return Number.isInteger(mxn) && mxn >= 1 && mxn <= PRECIO_MAX;
+}
