@@ -118,29 +118,48 @@
     animation-delay: calc(var(--i, 0) * 80ms);
   }
   .sticker {
-    animation: sticker 0.7s cubic-bezier(0.34, 1.56, 0.64, 1) both;
-    animation-delay: var(--delay, 0s);
+    /* backwards, not both: a filled animation would own scale/rotate and the hover transition below would snap */
+    animation:
+      sticker 1.2s cubic-bezier(0.22, 1.2, 0.36, 1) var(--delay, 0s) backwards,
+      float 5s ease-in-out calc(var(--delay, 0s) + 1.2s) infinite alternate;
   }
   .rise-num {
     display: inline-block;
-    animation: rise-num 0.7s cubic-bezier(0.2, 0.8, 0.2, 1) both;
-    animation-delay: calc(var(--i, 0) * 100ms);
+    animation: rise-num 0.9s cubic-bezier(0.22, 1, 0.36, 1) both;
+    animation-delay: calc(var(--i, 0) * 120ms + 150ms);
   }
   .marquee {
     animation: marquee 28s linear infinite;
   }
-  .marquee:hover {
-    animation-play-state: paused;
-  }
   .grow-x {
     transform-origin: left;
-    animation: grow-x 1s cubic-bezier(0.2, 0.8, 0.2, 1) both;
-    animation-delay: calc(var(--i, 0) * 150ms);
+    animation: grow-x 1.6s cubic-bezier(0.65, 0, 0.35, 1) both;
+    animation-delay: calc(var(--i, 0) * 250ms + 200ms);
+  }
+  .reveal {
+    animation: reveal 0.8s cubic-bezier(0.22, 1, 0.36, 1) both;
+    animation-delay: calc(var(--i, 0) * 90ms);
+  }
+  /* Animations inside [data-reveal] wait until the block scrolls into view (index.astro adds .is-visible).
+     A media query, not a JS class, so they are paused from the first paint; without JS they just play on load. */
+  @media (scripting: enabled) {
+    [data-reveal]:not(.is-visible),
+    [data-reveal]:not(.is-visible) * {
+      animation-play-state: paused;
+    }
+  }
+  .btn svg {
+    transition: translate 0.15s ease-out;
+  }
+  .btn:hover svg {
+    translate: 4px 0;
   }
 }
 .sticker {
   rotate: var(--rot, 0deg);
-  transition: scale 0.2s, rotate 0.2s;
+  transition:
+    scale 0.2s cubic-bezier(0.34, 1.56, 0.64, 1),
+    rotate 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 .sticker:hover {
   scale: 1.06;
@@ -156,8 +175,21 @@
 @keyframes sticker {
   from {
     opacity: 0;
-    scale: 0.4;
-    rotate: -30deg;
+    scale: 0.6;
+    rotate: -24deg;
+    translate: 0 -48px;
+  }
+}
+@keyframes float {
+  to {
+    transform: translateY(-8px) rotate(2deg);
+  }
+}
+@keyframes reveal {
+  /* translate, not transform: .card-lift:hover uses transform and must keep working after the reveal */
+  from {
+    opacity: 0;
+    translate: 0 32px;
   }
 }
 @keyframes rise-num {
