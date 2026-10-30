@@ -1,0 +1,294 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Icon from '../components/Icon.astro';
+import { getScooters } from '../lib/coleccion';
+import { getPreciosActuales } from '../lib/precios';
+import { puntuacion } from '../lib/puntuacion';
+
+const todos = await getScooters();
+const precios = await getPreciosActuales();
+// Solo lo que necesita la recomendación en el navegador.
+const catalogo = todos.map((s) => ({
+  slug: s.slug,
+  marca: s.marca,
+  modelo: s.modelo,
+  autonomiaFabricanteKm: s.autonomiaFabricanteKm,
+  pesoKg: s.pesoKg,
+  cargaMaxKg: s.cargaMaxKg,
+  plegable: s.plegable,
+  puntuacion: puntuacion(s, todos),
+  precioMxn: precios.get(s.slug)?.precioMxn ?? null,
+  verificadoEn: precios.get(s.slug)?.verificadoEn ?? null,
+}));
+
+const preguntas = [
+  {
+    param: 'd',
+    titulo: '¿Cuántos km haces al día, ida y vuelta?',
+    opciones: [5, 10, 20, 30, 45].map((km) => ({ valor: String(km), texto: `Hasta ${km} km` })),
+  },
+  {
+    param: 'p',
+    titulo: '¿Cuánto pesas?',
+    opciones: [
+      ...[60, 75, 90, 105, 120].map((kg) => ({ valor: String(kg), texto: `Hasta ${kg} kg` })),
+      { valor: '135', texto: 'Más de 120 kg' },
+    ],
+  },
+  {
+    param: 'b',
+    titulo: '¿Cuánto quieres gastar como máximo?',
+    opciones: [
+      ...[8000, 12000, 18000, 25000].map((mxn) => ({ valor: String(mxn), texto: `Hasta $${mxn.toLocaleString('es-MX')}` })),
+      { valor: 'sin', texto: 'Sin límite' },
+    ],
+  },
+  {
+    param: 's',
+    titulo: '¿Hay subidas en tu camino?',
+    opciones: [
+      { valor: '1', texto: 'Sí, varias' },
+      { valor: '0', texto: 'No, casi plano' },
+    ],
+  },
+  {
+    param: 'c',
+    titulo: '¿Vas a cargarlo por escaleras, metro o cajuela?',
+    opciones: [
+      { valor: '1', texto: 'Sí, que sea plegable y ligero' },
+      { valor: '0', texto: 'No, casi siempre rueda' },
+    ],
+  },
+];
+---
+
+<Layout title="Quiz: ¿qué scooter te conviene?" description="Cinco preguntas sobre tu ruta, tu peso y tu presupuesto, y te decimos qué tres scooters eléctricos te convienen.">
+  <section class="container-page pt-12 md:pt-16">
+    <p class="label">Quiz · 5 preguntas</p>
+    <h1 class="slam mt-4 font-display text-[clamp(44px,8vw,104px)] leading-[0.88] tracking-[-0.04em] uppercase">
+      ¿Cuál te <span class="inline-block bg-accent px-2 text-on-accent">conviene?</span>
+    </h1>
+
+    <noscript>
+      <div class="card mt-10 max-w-2xl p-6">
+        <p class="text-lg font-bold">El quiz necesita JavaScript para calcular tu recomendación.</p>
+        <p class="mt-2 text-muted">Puedes ver todos los modelos con su autonomía y precio en el comparador.</p>
+        <a href="/comparar" class="btn btn-ink mt-5">Ir al comparador <Icon name="arrow" class="size-4" /></a>
+      </div>
+    </noscript>
+
+    <p class="sr-only" aria-live="polite" data-estado></p>
+
+    <div data-quiz data-catalogo={JSON.stringify(catalogo)} hidden class="mt-10 max-w-3xl">
+      <p class="label">Pregunta <span data-num>1</span> de {preguntas.length}</p>
+      <div
+        class="mt-3 h-3 bg-surface-2"
+        role="progressbar"
+        aria-label="Progreso del quiz"
+        aria-valuemin="0"
+        aria-valuemax={preguntas.length}
+        aria-valuenow="0"
+        data-progreso
+      >
+        <div class="h-3 w-0 bg-accent transition-[width] duration-200 motion-reduce:transition-none"></div>
+      </div>
+
+      {preguntas.map((q, i) => (
+        <div role="group" aria-labelledby={`q${i}`} data-pregunta={q.param} hidden={i > 0} class="mt-8">
+          <h2 id={`q${i}`} tabindex="-1" class="font-display text-[clamp(28px,4.5vw,48px)] leading-[0.92] tracking-[-0.03em] uppercase">
+            {q.titulo}
+          </h2>
+          <div class="mt-6 grid gap-3 sm:grid-cols-2">
+            {q.opciones.map((o) => (
+              <button
+                type="button"
+                data-valor={o.valor}
+                aria-pressed="false"
+                class="btn btn-outline justify-start px-5 text-left normal-case tracking-normal aria-pressed:bg-fg aria-pressed:text-bg"
+              >
+                {o.texto}
+              </button>
+            ))}
+          </div>
+        </div>
+      ))}
+
+      <div class="mt-8 flex flex-wrap gap-3 border-t-2 border-line pt-6">
+        <button type="button" class="btn btn-outline disabled:cursor-not-allowed disabled:opacity-50" data-atras>Atrás</button>
+        <button type="button" class="btn btn-ink disabled:cursor-not-allowed disabled:opacity-50" data-adelante>
+          Siguiente <Icon name="arrow" class="size-4" />
+        </button>
+      </div>
+    </div>
+
+    <section data-resultado hidden aria-labelledby="resultado-titulo" class="mt-10">
+      <h2 id="resultado-titulo" tabindex="-1" class="font-display text-[clamp(32px,5vw,64px)] leading-[0.9] tracking-[-0.03em] uppercase" data-titulo></h2>
+      <p class="mt-3 text-lg text-muted" data-resumen></p>
+      <ol class="mt-8 grid gap-5 lg:grid-cols-3" data-lista></ol>
+      <div class="mt-8 flex flex-wrap gap-3">
+        <button type="button" class="btn btn-ink" data-compartir>Compartir</button>
+        <button type="button" class="btn btn-outline" data-reiniciar>Cambiar respuestas</button>
+      </div>
+      <p class="mt-4 text-sm text-muted">
+        Autonomía real estimada en ciudad con tu peso. Los precios se verifican a mano y pueden cambiar.
+      </p>
+    </section>
+
+    <template data-tarjeta>
+      <li class="card card-lift slam flex flex-col p-6">
+        <div class="flex items-start justify-between gap-3">
+          <p class="font-display text-6xl leading-none" data-pos></p>
+          <p class="rounded-full bg-fg px-3 py-1 text-xs font-bold tracking-[0.08em] text-bg uppercase" data-aviso hidden></p>
+        </div>
+        <h3 class="mt-4 text-2xl font-bold" data-nombre></h3>
+        <p class="mt-1 tabular-nums"><span class="font-display text-3xl" data-puntos></span> <span class="text-muted">/ 100 puntos</span></p>
+        <ul class="mt-4 flex flex-col gap-2" data-motivos></ul>
+        <p class="mt-5 font-display text-2xl tabular-nums" data-precio></p>
+        <p class="text-sm text-muted" data-fecha></p>
+        <a class="btn btn-ink mt-auto" data-ficha>Ver ficha <Icon name="arrow" class="size-4" /></a>
+      </li>
+    </template>
+  </section>
+</Layout>
+
+<script>
+  import { formatoPrecio } from '../lib/formato';
+  import { aParametros, completas, leerRespuestas, recomendar, type Candidato } from '../lib/recomendar';
+
+  type Modelo = Candidato & { verificadoEn: string | null };
+
+  const quiz = document.querySelector<HTMLElement>('[data-quiz]')!;
+  const catalogo: Modelo[] = JSON.parse(quiz.dataset.catalogo!);
+  const pasos = [...quiz.querySelectorAll<HTMLElement>('[data-pregunta]')];
+  const resultado = document.querySelector<HTMLElement>('[data-resultado]')!;
+  const estado = document.querySelector<HTMLElement>('[data-estado]')!;
+  const atras = quiz.querySelector<HTMLButtonElement>('[data-atras]')!;
+  const adelante = quiz.querySelector<HTMLButtonElement>('[data-adelante]')!;
+  const progreso = quiz.querySelector<HTMLElement>('[data-progreso]')!;
+  const tarjeta = document.querySelector<HTMLTemplateElement>('[data-tarjeta]')!;
+
+  // Solo respuestas válidas y acotadas; lo demás de la URL se ignora.
+  let params = aParametros(leerRespuestas(new URLSearchParams(location.search)));
+  let actual = 0;
+
+  function contestadas() {
+    return pasos.filter((p) => params.has(p.dataset.pregunta!)).length;
+  }
+
+  function irA(i: number, enfocar = true) {
+    actual = i;
+    quiz.hidden = false;
+    resultado.hidden = true;
+    pasos.forEach((p, j) => {
+      p.hidden = j !== i;
+      for (const b of p.querySelectorAll<HTMLButtonElement>('[data-valor]')) {
+        b.setAttribute('aria-pressed', String(params.get(p.dataset.pregunta!) === b.dataset.valor));
+      }
+    });
+    quiz.querySelector('[data-num]')!.textContent = String(i + 1);
+    const hechas = contestadas();
+    progreso.setAttribute('aria-valuenow', String(hechas));
+    (progreso.firstElementChild as HTMLElement).style.width = `${(100 * hechas) / pasos.length}%`;
+    atras.disabled = i === 0;
+    adelante.disabled = !params.has(pasos[i].dataset.pregunta!);
+    estado.textContent = `Pregunta ${i + 1} de ${pasos.length}`;
+    if (enfocar) pasos[i].querySelector<HTMLElement>('h2')!.focus();
+  }
+
+  function siguiente() {
+    const pendiente = pasos.findIndex((p) => !params.has(p.dataset.pregunta!));
+    if (actual + 1 < pasos.length) irA(actual + 1);
+    else if (pendiente >= 0) irA(pendiente);
+    else mostrarResultado();
+  }
+
+  function mostrarResultado(enfocar = true) {
+    const resp = leerRespuestas(params);
+    if (!completas(resp)) return;
+    history.replaceState(null, '', `?${params}`);
+    const recs = recomendar(resp, catalogo);
+    const alguno = recs.some((r) => r.cumple);
+
+    resultado.querySelector('[data-titulo]')!.textContent = alguno
+      ? `Tus ${recs.length} scooters`
+      : 'Ninguno cumple todo: estos son los más cercanos';
+    resultado.querySelector('[data-resumen]')!.textContent = [
+      `${resp.distanciaKm} km al día`,
+      `${resp.pesoKg} kg`,
+      resp.presupuestoMxn === null ? 'sin límite de presupuesto' : `hasta ${formatoPrecio(resp.presupuestoMxn)}`,
+      resp.subidas ? 'con subidas' : 'casi plano',
+      resp.portatil ? 'lo cargas' : 'casi siempre rueda',
+    ].join(' · ');
+
+    const lista = resultado.querySelector('[data-lista]')!;
+    lista.replaceChildren(
+      ...recs.map((r, i) => {
+        const li = (tarjeta.content.firstElementChild as HTMLElement).cloneNode(true) as HTMLElement;
+        const $ = (sel: string) => li.querySelector<HTMLElement>(sel)!;
+        li.style.setProperty('--i', String(i));
+        $('[data-pos]').textContent = String(i + 1).padStart(2, '0');
+        if (!r.cumple) {
+          $('[data-aviso]').hidden = false;
+          $('[data-aviso]').textContent = r.llega ? 'No cumple' : 'No llega';
+        }
+        $('[data-nombre]').textContent = `${r.scooter.marca} ${r.scooter.modelo}`;
+        $('[data-puntos]').textContent = String(r.scooter.puntuacion);
+        $('[data-motivos]').replaceChildren(
+          ...r.motivos.map((m) => {
+            const item = document.createElement('li');
+            item.className = 'border-l-4 border-accent pl-3';
+            item.textContent = m;
+            return item;
+          }),
+        );
+        $('[data-precio]').textContent = formatoPrecio(r.scooter.precioMxn);
+        if (r.scooter.verificadoEn) {
+          const fecha = new Date(r.scooter.verificadoEn).toLocaleDateString('es-MX', {
+            day: 'numeric',
+            month: 'long',
+            timeZone: 'America/Mexico_City',
+          });
+          $('[data-fecha]').textContent = `Verificado el ${fecha}`;
+        }
+        const ficha = $('[data-ficha]') as HTMLAnchorElement;
+        ficha.href = `/scooter/${encodeURIComponent(r.scooter.slug)}`;
+        ficha.setAttribute('aria-label', `Ver ficha del ${r.scooter.marca} ${r.scooter.modelo}`);
+        return li;
+      }),
+    );
+
+    quiz.hidden = true;
+    resultado.hidden = false;
+    estado.textContent = `Resultado listo: ${recs.map((r) => `${r.scooter.marca} ${r.scooter.modelo}`).join(', ')}`;
+    if (enfocar) resultado.querySelector<HTMLElement>('h2')!.focus();
+  }
+
+  for (const paso of pasos) {
+    paso.addEventListener('click', (e) => {
+      const b = (e.target as HTMLElement).closest<HTMLButtonElement>('[data-valor]');
+      if (!b) return;
+      params.set(paso.dataset.pregunta!, b.dataset.valor!);
+      siguiente();
+    });
+  }
+  atras.addEventListener('click', () => actual > 0 && irA(actual - 1));
+  adelante.addEventListener('click', siguiente);
+  resultado.querySelector('[data-reiniciar]')!.addEventListener('click', () => irA(0));
+
+  const compartir = resultado.querySelector<HTMLButtonElement>('[data-compartir]')!;
+  if (!navigator.share) compartir.textContent = 'Copiar enlace';
+  compartir.addEventListener('click', async () => {
+    const url = location.href;
+    try {
+      if (navigator.share) return await navigator.share({ title: document.title, url });
+      await navigator.clipboard.writeText(url);
+      estado.textContent = 'Enlace copiado';
+      compartir.textContent = 'Enlace copiado';
+    } catch (e) {
+      if ((e as Error).name !== 'AbortError') estado.textContent = `No se pudo compartir. Copia la dirección: ${url}`;
+    }
+  });
+
+  if (completas(leerRespuestas(params))) mostrarResultado(false);
+  else irA(Math.max(0, pasos.findIndex((p) => !params.has(p.dataset.pregunta!))), false);
+</script>
