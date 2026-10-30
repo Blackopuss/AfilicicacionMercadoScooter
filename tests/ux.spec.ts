@@ -2,7 +2,16 @@ import { test, expect } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 
 // Add every new page here so it gets the same UX/a11y checks.
-const PAGES = ['/', '/aviso-de-privacidad', '/como-ganamos-dinero', '/404'];
+const PAGES = [
+  '/',
+  '/aviso-de-privacidad',
+  '/como-ganamos-dinero',
+  '/404',
+  '/comparar',
+  '/como-puntuamos',
+  '/scooter/xiaomi-electric-scooter-5',
+  '/scooter/segway-ninebot-max-g2',
+];
 const WIDTHS = [375, 768, 1280];
 const SCHEMES = ['light', 'dark'] as const;
 
