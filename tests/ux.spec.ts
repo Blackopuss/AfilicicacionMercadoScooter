@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 
 // Add every new page here so it gets the same UX/a11y checks.
-const PAGES = ['/', '/aviso-de-privacidad', '/como-ganamos-dinero', '/404', '/mapa'];
+const PAGES = ['/', '/aviso-de-privacidad', '/como-ganamos-dinero', '/404', '/mapa', '/admin'];
 const WIDTHS = [375, 768, 1280];
 const SCHEMES = ['light', 'dark'] as const;
 
