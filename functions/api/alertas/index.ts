@@ -1,7 +1,7 @@
 import { z } from 'astro/zod';
 import { emailConfirmacion } from '../../../src/lib/alertas';
 import { PRECIO_MAX } from '../../../src/lib/precios';
-import { enviarEmails, json, nombresModelos, nuevoToken, supabaseAdmin, turnstileValido, type EnvAlertas } from '../../_lib/alertas';
+import { enviarEmails, json, sinDatos, nombresModelos, nuevoToken, supabaseAdmin, turnstileValido, type EnvAlertas } from '../../_lib/alertas';
 
 // POST /api/alertas: suscribe un email a la alerta de precio de un modelo (doble opt-in).
 // Orden de docs/seguridad.md §3. Rate limit por IP: regla de Cloudflare (docs/alertas.md); por email, aquí abajo.
@@ -87,7 +87,7 @@ export async function onRequest({ request, env, waitUntil }: Contexto): Promise<
     }
     return json(202, OK);
   } catch (e) {
-    console.error('[alertas]', e);
+    console.error('[alertas]', sinDatos(e));
     return json(500, { error: 'No disponible' });
   }
 }

@@ -39,8 +39,8 @@ function nivelAgua(ip: string | null): number {
   return ip ? Number(ip[3]) : 0;
 }
 
-const NOTA_SUSPENSION: Record<Scooter['suspension'], number> = { ninguna: 0, delantera: 0.6, trasera: 0.4, doble: 1 };
-const NOTA_RUEDA: Record<Scooter['tipoRueda'], number> = { solida: 0, neumatica: 0.8, tubeless: 1 };
+export const NOTA_SUSPENSION: Record<Scooter['suspension'], number> = { ninguna: 0, delantera: 0.6, trasera: 0.4, doble: 1 };
+export const NOTA_RUEDA: Record<Scooter['tipoRueda'], number> = { solida: 0, neumatica: 0.8, tubeless: 1 };
 
 /**
  * Pesos de la puntuación (suman 1). Se priorizan lo que más importa al moverse por ciudad en México:

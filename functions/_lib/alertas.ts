@@ -12,6 +12,9 @@ export type EnvAlertas = {
   ASSETS?: { fetch(input: string | URL | Request): Promise<Response> }; // binding de Pages a los archivos estáticos
 };
 
+/** Solo el mensaje: el campo details de PostgREST puede llevar el email (sin datos personales en los logs). */
+export const sinDatos = (e: unknown) => (e as { message?: unknown } | null)?.message ?? String(e);
+
 export const TOKEN = /^[A-Za-z0-9_-]{43}$/; // 32 bytes en base64url
 
 export function json(status: number, body: object, headers: Record<string, string> = {}): Response {
@@ -131,7 +134,7 @@ export async function porToken(
   if (!supabase) console.error('[alertas] Faltan PUBLIC_SUPABASE_URL o SUPABASE_SERVICE_ROLE_KEY');
   else if (t && TOKEN.test(t)) {
     const { error } = await accion(supabase, await sha256Hex(t));
-    if (error) console.error('[alertas]', error);
+    if (error) console.error('[alertas]', sinDatos(error));
   }
   // no-referrer: el token de la URL no viaja a la página siguiente.
   return new Response(null, { status: 303, headers: { Location: destino, 'Cache-Control': 'no-store', 'Referrer-Policy': 'no-referrer' } });

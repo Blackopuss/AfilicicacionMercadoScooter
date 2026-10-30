@@ -8,7 +8,7 @@ objetivo, si bajó). Los correos enlazan **solo a la web** (la ficha del modelo 
 
 | Pieza | Qué hace |
 |---|---|
-| `src/components/AlertaForm.astro` | Formulario: correo, modelo, precio objetivo opcional, consentimiento obligatorio y Turnstile (se carga solo cuando el formulario se ve). Úsalo con `<AlertaForm id="alerta-ficha" slug={slug} />` |
+| `src/components/AlertaForm.astro` | Formulario: correo, modelo, precio objetivo opcional, consentimiento obligatorio y Turnstile (se carga solo cuando el formulario se ve). En la ficha: `<AlertaForm id="alerta-ficha" slug={s.slug} />` (sección `#alerta`) |
 | `src/components/AlertaPopup.astro` | Popup de salida en `Layout.astro`: exit-intent en escritorio; en móvil, 60 % de scroll o 45 s. Máximo una vez cada 7 días (`localStorage`). No sale en `/admin`, `/aviso-de-privacidad` ni `/alertas/*` |
 | `POST /api/alertas` | Valida (zod), verifica Turnstile, guarda con `confirmado = false` y el SHA-256 de un token aleatorio de 32 bytes, envía la confirmación. Misma respuesta (202) exista o no el correo |
 | `GET /api/alertas/confirmar?t=` | Confirma la alerta de ese token. Siempre redirige a `/alertas/confirmada` |
@@ -60,7 +60,6 @@ Nada más. Los dos scripts nuevos inline (formulario y popup) llevan su hash, qu
 
 ## Pendiente
 
-- Ponerlo en la ficha `/scooter/[slug]` cuando exista en `desarrollo`: `<AlertaForm id="alerta-ficha" slug={scooter.slug} />`.
 - Los filtros de enlaces de algunos correos corporativos abren los links solos: pueden confirmar (o dar de baja)
   sin que la persona haga clic. Si se nota, cambiar `confirmar` y `baja` a una página con un botón que haga POST.
 - El aviso puede llegar unos minutos antes de que la web reconstruida muestre el precio nuevo.
