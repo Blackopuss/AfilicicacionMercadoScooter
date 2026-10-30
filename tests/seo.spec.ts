@@ -1,12 +1,12 @@
 import { test, expect } from '@playwright/test';
 import { readFileSync } from 'node:fs';
 
-test('el sitemap lista las páginas públicas y nunca /admin', () => {
+test('el sitemap lista las páginas públicas y ninguna noindex', () => {
   expect(readFileSync('dist/sitemap-index.xml', 'utf8')).toContain('/sitemap-0.xml');
   const urls = [...readFileSync('dist/sitemap-0.xml', 'utf8').matchAll(/<loc>([^<]+)<\/loc>/g)].map((m) => new URL(m[1]).pathname);
   expect(urls).toEqual(expect.arrayContaining(['/', '/comparar/', '/guias/', '/mejores/ligeros/', '/scooter/xiaomi-electric-scooter-5/']));
   expect(urls.some((u) => u.includes('-vs-'))).toBe(true);
-  expect(urls.filter((u) => u.startsWith('/admin') || u === '/404/')).toEqual([]);
+  expect(urls.filter((u) => /^\/(admin|404|alertas)\//.test(u))).toEqual([]);
 });
 
 test('robots.txt apunta al sitemap', async ({ request }) => {

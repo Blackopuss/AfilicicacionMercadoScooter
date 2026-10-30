@@ -14,10 +14,8 @@ export default defineConfig({
   site: SITE_URL || 'https://example.com',
   integrations: [
     sitemap({
-      filter: (page) => {
-        const ruta = new URL(page).pathname;
-        return !ruta.startsWith('/admin') && ruta !== '/404/';
-      },
+      // Fuera las páginas noindex: panel, 404 y confirmación/baja de alertas.
+      filter: (page) => !/^\/(admin|404|alertas)\//.test(new URL(page).pathname),
     }),
   ],
   vite: {
