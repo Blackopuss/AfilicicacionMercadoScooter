@@ -1,0 +1,149 @@
+---
+import '@fontsource/archivo-black';
+import '@fontsource-variable/archivo';
+import '../styles/global.css';
+import Icon from '../components/Icon.astro';
+import { SITE, NAV } from '../config';
+
+interface Props {
+  title?: string;
+  description?: string;
+}
+const { title, description = SITE.description } = Astro.props;
+const pageTitle = title ? `${title} · ${SITE.name}` : `${SITE.name} · Compara scooters eléctricos en México`;
+const path = Astro.url.pathname;
+---
+
+<!doctype html>
+<html lang="es-MX">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <title>{pageTitle}</title>
+    <meta name="description" content={description} />
+    <meta name="theme-color" content="#111111" media="(prefers-color-scheme: dark)" />
+    <meta name="theme-color" content="#f2efe9" media="(prefers-color-scheme: light)" />
+    <script is:inline>
+      // Apply the saved theme before paint to avoid a flash.
+      try {
+        const t = localStorage.getItem('theme');
+        if (t === 'light' || t === 'dark') document.documentElement.dataset.theme = t;
+      } catch {}
+    </script>
+  </head>
+  <body class="flex min-h-dvh flex-col overflow-x-clip">
+    <a href="#main" class="btn btn-accent sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-50">
+      Saltar al contenido
+    </a>
+
+    <header class="sticky top-0 z-40 border-b-2 border-line bg-bg">
+      <div class="container-page flex h-[68px] items-center justify-between gap-4">
+        <a href="/" class="flex min-h-11 items-center font-display text-2xl tracking-tight uppercase">{SITE.name}</a>
+
+        <nav aria-label="Principal" class="hidden md:block">
+          <ul class="flex items-center gap-1">
+            {NAV.map((item) => (
+              <li>
+                <a
+                  href={item.href}
+                  aria-current={path.startsWith(item.href) ? 'page' : undefined}
+                  class="inline-flex min-h-11 items-center px-3 text-[15px] font-semibold uppercase decoration-2 underline-offset-8 hover:underline aria-[current=page]:underline"
+                >
+                  {item.label}
+                </a>
+              </li>
+            ))}
+          </ul>
+        </nav>
+
+        <div class="flex items-center gap-1">
+          <button
+            type="button"
+            data-theme-toggle
+            class="grid size-11 cursor-pointer place-items-center hover:bg-surface-2"
+            aria-label="Cambiar a modo claro u oscuro"
+          >
+            <Icon name="sun" class="hidden size-5 dark:block" />
+            <Icon name="moon" class="size-5 dark:hidden" />
+          </button>
+          <button
+            type="button"
+            data-menu-toggle
+            aria-expanded="false"
+            aria-controls="mobile-menu"
+            class="grid size-11 cursor-pointer place-items-center hover:bg-surface-2 md:hidden"
+            aria-label="Abrir menú"
+          >
+            <Icon name="menu" class="size-5" />
+          </button>
+        </div>
+      </div>
+
+      <nav id="mobile-menu" aria-label="Principal" class="hidden border-t-2 border-line md:hidden">
+        <ul class="container-page flex flex-col py-2">
+          {NAV.map((item) => (
+            <li>
+              <a href={item.href} class="flex min-h-14 items-center font-display text-2xl uppercase">{item.label}</a>
+            </li>
+          ))}
+        </ul>
+      </nav>
+    </header>
+
+    <main id="main" class="flex-1">
+      <slot />
+    </main>
+
+    <footer class="mt-24 bg-fg text-bg">
+      <div class="container-page grid gap-10 py-14 md:grid-cols-[2fr_1fr_1fr]">
+        <div class="max-w-md">
+          <p class="font-display text-4xl uppercase">{SITE.name}</p>
+          <p class="mt-4 text-sm opacity-80">
+            Somos afiliados de Mercado Libre: si compras desde nuestros enlaces ganamos una comisión, sin costo
+            extra para ti. Eso nunca cambia el orden ni la puntuación de los scooters. Los precios se verifican a
+            mano y pueden cambiar.
+          </p>
+        </div>
+        <nav aria-label="Secciones">
+          <p class="label">Explora</p>
+          <ul class="mt-2 text-sm">
+            {NAV.map((item) => <li><a href={item.href} class="inline-flex min-h-11 items-center underline-offset-4 hover:underline">{item.label}</a></li>)}
+          </ul>
+        </nav>
+        <nav aria-label="Legal">
+          <p class="label">Transparencia</p>
+          <ul class="mt-2 text-sm">
+            <li><a href="/como-puntuamos" class="inline-flex min-h-11 items-center underline-offset-4 hover:underline">Cómo puntuamos</a></li>
+            <li><a href="/como-ganamos-dinero" class="inline-flex min-h-11 items-center underline-offset-4 hover:underline">Cómo ganamos dinero</a></li>
+            <li><a href="/aviso-de-privacidad" class="inline-flex min-h-11 items-center underline-offset-4 hover:underline">Aviso de privacidad</a></li>
+          </ul>
+        </nav>
+      </div>
+      <p class="container-page pb-8 text-xs opacity-70">© {new Date().getFullYear()} {SITE.name}</p>
+    </footer>
+
+    <script>
+      const root = document.documentElement;
+      document.querySelector('[data-theme-toggle]')?.addEventListener('click', () => {
+        const isDark =
+          root.dataset.theme === 'dark' ||
+          (!root.dataset.theme && matchMedia('(prefers-color-scheme: dark)').matches);
+        const next = isDark ? 'light' : 'dark';
+        root.dataset.theme = next;
+        try {
+          localStorage.setItem('theme', next);
+        } catch {}
+      });
+
+      const menuBtn = document.querySelector<HTMLButtonElement>('[data-menu-toggle]');
+      const menu = document.getElementById('mobile-menu');
+      menuBtn?.addEventListener('click', () => {
+        const open = menuBtn.getAttribute('aria-expanded') === 'true';
+        menuBtn.setAttribute('aria-expanded', String(!open));
+        menuBtn.setAttribute('aria-label', open ? 'Abrir menú' : 'Cerrar menú');
+        menu?.classList.toggle('hidden', open);
+      });
+    </script>
+  </body>
+</html>

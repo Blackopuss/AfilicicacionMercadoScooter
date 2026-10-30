@@ -1,0 +1,141 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Icon from '../components/Icon.astro';
+
+// shortcut: value props until real price drops exist; swap for "↓ [modelo] bajó X %" items in the data phase.
+const ticker = [
+  'Precio verificado hoy',
+  'Autonomía real, no la del folleto',
+  'Historial de 90 días',
+  'Todo México',
+  'Alertas de precio',
+];
+
+const features = [
+  { title: 'Precio de hoy', text: 'Verificado a mano cada mañana. Siempre con fecha.' },
+  { title: '¿Oferta de verdad?', text: 'Historial de cada modelo: detecta cuando suben antes del “descuento”.' },
+  { title: 'Autonomía real', text: 'Ajustada a tu peso, las subidas y el tráfico. No la del folleto.' },
+  { title: '¿Llegas o no?', text: 'Pon tu ruta y te decimos qué scooters la aguantan de ida y vuelta.' },
+  { title: 'Cara a cara', text: 'Dos modelos frente a frente: quién gana en cada especificación.' },
+  { title: 'Alertas', text: 'Te avisamos cuando el scooter que quieres baje de precio.' },
+];
+
+const bars = [
+  { label: 'Lo que dice el folleto', width: 100, accent: false },
+  { label: 'Real con tu peso', width: 68, accent: true },
+  { label: 'Real con subidas y tráfico', width: 54, accent: true },
+];
+---
+
+<Layout>
+  <!-- Hero -->
+  <section class="container-page relative pt-12 pb-12 md:pt-16">
+    <p class="label">Comparador de scooters eléctricos · México</p>
+    <h1
+      class="slam mt-4 font-display text-[clamp(56px,11vw,150px)] leading-[0.86] tracking-[-0.04em] uppercase"
+    >
+      ¿Llegas<br />o no<br /><span class="bg-accent px-3 text-on-accent">llegas?</span>
+    </h1>
+
+    <div
+      class="sticker absolute top-24 right-6 hidden size-40 place-items-center rounded-full bg-fg text-center font-display text-lg leading-tight text-bg uppercase md:grid lg:right-10"
+      style="--rot: 8deg; --delay: .6s"
+      aria-hidden="true"
+    >
+      Precio<br />real<br />de hoy
+    </div>
+    <div
+      class="sticker absolute top-[17.5rem] right-4 hidden border-2 border-line bg-surface px-4 py-3 font-bold md:block"
+      style="--rot: -10deg; --delay: .8s"
+      aria-hidden="true"
+    >
+      Autonomía real, no la del folleto
+    </div>
+
+    <div class="mt-10 flex flex-wrap items-end justify-between gap-6">
+      <p class="slam max-w-xl text-xl leading-relaxed text-pretty" style="--i:2">
+        Los scooters que puedes comprar hoy en México, con su precio verificado cada mañana y su historial. Sin
+        rodeos.
+      </p>
+      <div class="slam flex flex-wrap gap-3" style="--i:3">
+        <a href="/quiz" class="btn btn-ink">
+          Hacer el quiz
+          <Icon name="arrow" class="size-4" />
+        </a>
+        <a href="/comparar" class="btn btn-outline">Comparar modelos</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Ticker: always ink (orange on cream fails contrast); second copy only makes the loop seamless -->
+  <div class="overflow-hidden border-y-2 border-line bg-[#111111] py-4 text-accent">
+    <p class="sr-only">{ticker.join('. ')}</p>
+    <div class="marquee flex w-max gap-10 font-display text-2xl whitespace-nowrap uppercase" aria-hidden="true">
+      {[0, 1].map(() =>
+        ticker.map((t) => (
+          <>
+            <span>{t}</span>
+            <span class="text-[#f2efe9]">✦</span>
+          </>
+        )),
+      )}
+    </div>
+  </div>
+
+  <!-- Features -->
+  <section class="container-page pt-20" aria-labelledby="features-title">
+    <div class="flex flex-wrap items-end justify-between gap-4 border-b-2 border-line pb-4">
+      <h2 id="features-title" class="font-display text-[clamp(36px,5vw,64px)] leading-[0.9] tracking-[-0.03em] uppercase">
+        Lo que el folleto no te dice
+      </h2>
+      <p class="font-semibold">Seis razones para comparar aquí</p>
+    </div>
+    <ul class="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+      {features.map((f, i) => (
+        <li class="card card-lift p-6">
+          <p class="overflow-hidden font-display text-7xl leading-none">
+            <span class="rise-num" style={`--i:${i}`}>{String(i + 1).padStart(2, '0')}</span>
+          </p>
+          <h3 class="mt-4 text-2xl font-bold">{f.title}</h3>
+          <p class="mt-2 text-muted">{f.text}</p>
+        </li>
+      ))}
+    </ul>
+  </section>
+
+  <!-- Real range -->
+  <section class="container-page mt-24 flex flex-wrap gap-10">
+    <div class="min-w-0 flex-[1_1_420px]">
+      <h2 class="font-display text-[clamp(36px,5vw,64px)] leading-[0.9] tracking-[-0.03em] uppercase">
+        El folleto promete.<br /><span class="text-accent-ink">La calle decide.</span>
+      </h2>
+      <p class="mt-5 text-lg leading-relaxed">
+        Ajustamos la autonomía a tu peso, las subidas y el tráfico real. Si no llegas, te lo decimos antes de que
+        compres.
+      </p>
+    </div>
+    <div class="card flex min-w-0 flex-[1_1_380px] flex-col gap-5 p-6" role="img" aria-label="Ejemplo: la autonomía real es menor que la del folleto">
+      {bars.map((b, i) => (
+        <div>
+          <p class="label">{b.label}</p>
+          <div class="mt-2 h-7 bg-surface-2">
+            <div class={`grow-x h-7 ${b.accent ? 'bg-accent' : 'bg-fg'}`} style={`width:${b.width}%; --i:${i}`}></div>
+          </div>
+        </div>
+      ))}
+    </div>
+  </section>
+
+  <!-- Final CTA -->
+  <section class="container-page mt-24">
+    <div class="flex flex-wrap items-center justify-between gap-6 border-2 border-line bg-accent p-8 text-on-accent md:p-12">
+      <h2 class="max-w-2xl font-display text-[clamp(30px,4.5vw,56px)] leading-[0.95] uppercase">
+        ¿No sabes cuál? Te lo decimos en un minuto.
+      </h2>
+      <a href="/quiz" class="btn bg-on-accent text-accent hover:opacity-90">
+        Hacer el quiz
+        <Icon name="arrow" class="size-4" />
+      </a>
+    </div>
+  </section>
+</Layout>

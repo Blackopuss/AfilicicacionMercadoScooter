@@ -1,0 +1,178 @@
+@import "tailwindcss";
+
+/* dark: = toggle set to dark, or system dark when the toggle is untouched */
+@custom-variant dark {
+  &:where([data-theme="dark"], [data-theme="dark"] *) {
+    @slot;
+  }
+  @media (prefers-color-scheme: dark) {
+    &:where(:root:not([data-theme="light"]), :root:not([data-theme="light"]) *) {
+      @slot;
+    }
+  }
+}
+
+/* Tokens: see design-system/webafiliados/MASTER.md ("Asfalto") */
+:root {
+  --bg: #f2efe9;
+  --surface: #ffffff;
+  --surface-2: #e4dfd5;
+  --border: #111111;
+  --fg: #111111;
+  --muted: #4a463f;
+  --accent: #ff4f12;
+  --on-accent: #111111;
+  --accent-ink: #b8370a;
+  --good: #11683a;
+  --bad: #b91c1c;
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #111111;
+    --surface: #1c1b19;
+    --surface-2: #2a2824;
+    --border: #f2efe9;
+    --fg: #f2efe9;
+    --muted: #b8b1a5;
+    --accent-ink: #ff6a33;
+    --good: #4ade80;
+    --bad: #f87171;
+    color-scheme: dark;
+  }
+}
+
+:root[data-theme="dark"] {
+  --bg: #111111;
+  --surface: #1c1b19;
+  --surface-2: #2a2824;
+  --border: #f2efe9;
+  --fg: #f2efe9;
+  --muted: #b8b1a5;
+  --accent-ink: #ff6a33;
+  --good: #4ade80;
+  --bad: #f87171;
+  color-scheme: dark;
+}
+
+@theme inline {
+  --font-display: "Archivo Black", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: "Archivo Variable", ui-sans-serif, system-ui, sans-serif;
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-line: var(--border);
+  --color-fg: var(--fg);
+  --color-muted: var(--muted);
+  --color-accent: var(--accent);
+  --color-on-accent: var(--on-accent);
+  --color-accent-ink: var(--accent-ink);
+  --color-good: var(--good);
+  --color-bad: var(--bad);
+}
+
+@layer base {
+  body {
+    @apply bg-bg text-fg font-sans antialiased;
+  }
+  :focus-visible {
+    outline: 2px solid var(--accent-ink);
+    outline-offset: 2px;
+  }
+}
+
+@layer components {
+  .container-page {
+    @apply mx-auto w-full max-w-6xl px-4 sm:px-6;
+  }
+  .label {
+    @apply text-xs font-bold tracking-[0.12em] uppercase;
+  }
+  .btn {
+    @apply inline-flex min-h-14 cursor-pointer items-center justify-center gap-2 px-7 font-bold tracking-[0.04em] uppercase transition duration-150 active:scale-[0.97];
+  }
+  /* Use together with .btn */
+  .btn-ink {
+    @apply bg-fg text-bg hover:bg-accent hover:text-on-accent;
+  }
+  .btn-outline {
+    @apply border-2 border-line text-fg hover:bg-fg hover:text-bg;
+  }
+  .btn-accent {
+    @apply bg-accent text-on-accent hover:bg-fg hover:text-bg;
+  }
+  .card {
+    @apply border-2 border-line bg-surface transition duration-200 ease-out;
+  }
+  .card-lift:hover {
+    transform: translate(-3px, -3px);
+    box-shadow: 6px 6px 0 var(--border);
+  }
+}
+
+/* Motion — final state shown immediately when motion is reduced */
+@media (prefers-reduced-motion: no-preference) {
+  .slam {
+    animation: slam 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+    animation-delay: calc(var(--i, 0) * 80ms);
+  }
+  .sticker {
+    animation: sticker 0.7s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+    animation-delay: var(--delay, 0s);
+  }
+  .rise-num {
+    display: inline-block;
+    animation: rise-num 0.7s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+    animation-delay: calc(var(--i, 0) * 100ms);
+  }
+  .marquee {
+    animation: marquee 28s linear infinite;
+  }
+  .marquee:hover {
+    animation-play-state: paused;
+  }
+  .grow-x {
+    transform-origin: left;
+    animation: grow-x 1s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+    animation-delay: calc(var(--i, 0) * 150ms);
+  }
+}
+.sticker {
+  rotate: var(--rot, 0deg);
+  transition: scale 0.2s, rotate 0.2s;
+}
+.sticker:hover {
+  scale: 1.06;
+  rotate: 0deg;
+}
+
+@keyframes slam {
+  from {
+    opacity: 0;
+    transform: translateY(40px) skewY(4deg);
+  }
+}
+@keyframes sticker {
+  from {
+    opacity: 0;
+    scale: 0.4;
+    rotate: -30deg;
+  }
+}
+@keyframes rise-num {
+  from {
+    opacity: 0;
+    transform: translateY(100%);
+  }
+}
+@keyframes marquee {
+  to {
+    transform: translateX(-50%);
+  }
+}
+@keyframes grow-x {
+  from {
+    transform: scaleX(0);
+  }
+}
