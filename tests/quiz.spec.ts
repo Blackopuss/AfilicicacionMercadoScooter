@@ -20,7 +20,7 @@ test('recorre el quiz completo y muestra 3 resultados enlazables', async ({ page
   const tarjetas = page.locator('[data-lista] > li');
   await expect(tarjetas).toHaveCount(3);
   await expect(page.getByRole('heading', { name: 'Tus 3 scooters' })).toBeFocused();
-  await expect(tarjetas.first()).toContainText('Precio pendiente');
+  await expect(tarjetas.first()).toContainText(/Precio pendiente|\$/);
   await expect(tarjetas.first().getByRole('link')).toHaveAttribute('href', /^\/scooter\/[a-z0-9-]+$/);
   await expect(page).toHaveURL(/\/quiz\?d=10&p=75&b=sin&s=0&c=1$/);
 

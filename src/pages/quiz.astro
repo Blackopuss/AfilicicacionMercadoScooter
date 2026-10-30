@@ -266,7 +266,7 @@ const preguntas = [
   for (const paso of pasos) {
     paso.addEventListener('click', (e) => {
       const b = (e.target as HTMLElement).closest<HTMLButtonElement>('[data-valor]');
-      if (!b) return;
+      if (!b || e.detail > 1) return; // el 2.º clic de un doble clic no contesta la pregunta siguiente
       params.set(paso.dataset.pregunta!, b.dataset.valor!);
       siguiente();
     });
