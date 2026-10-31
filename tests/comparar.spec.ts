@@ -1,6 +1,11 @@
 import { test, expect, type Page } from '@playwright/test';
+import { readFileSync, readdirSync } from 'node:fs';
 
-const TOTAL = 16;
+// Modelos activos del catálogo: así la prueba no se rompe al añadir o quitar un JSON.
+const DIR = 'src/content/scooters';
+const TOTAL = readdirSync(DIR)
+  .filter((f) => f.endsWith('.json'))
+  .filter((f) => JSON.parse(readFileSync(`${DIR}/${f}`, 'utf8')).activo).length;
 const filas = (page: Page) => page.locator('tbody[data-lista] > tr:visible');
 const valores = (page: Page, attr: string) =>
   filas(page).evaluateAll((els, a) => els.map((el) => el.getAttribute(a)!), attr);
