@@ -7,8 +7,7 @@ A → B, quiz recomendador y guías. Monetiza con el Programa de Afiliados de Me
 ## Estado (31/10/2026)
 
 **Fases 1-8 terminadas y publicadas en producción** (https://comparador-scooters-mx.pages.dev), con todas las revisiones del CI en verde. Validación integrada:
-0 errores de tipos, 111 pruebas unitarias, 351 pruebas de UX/accesibilidad y CSP correcto en 157 páginas.
-Falta que el dueño abra el PR `desarrollo` → `main`.
+0 errores de tipos, 133 pruebas unitarias y 390 de UX/accesibilidad; CSP correcto en todas las páginas.
 
 | Función | PR | Notas |
 |---|---|---|
