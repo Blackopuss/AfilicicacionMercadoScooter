@@ -1,3 +1,4 @@
+import { readFile } from 'node:fs/promises';
 import { test, expect } from '@playwright/test';
 
 test.use({ reducedMotion: 'reduce' });
@@ -28,6 +29,37 @@ test('recorre el quiz completo y muestra 3 resultados enlazables', async ({ page
   const primero = await tarjetas.first().locator('h3').textContent();
   await page.goto(page.url());
   await expect(tarjetas.first().locator('h3')).toHaveText(primero!);
+});
+
+// Tamaño de un PNG: ancho y alto en los bytes 16-23 (cabecera IHDR).
+const medidasPng = (png: Buffer) => [png.readUInt32BE(16), png.readUInt32BE(20)];
+
+test('sin compartir archivos, descarga la tarjeta para historias', async ({ page }) => {
+  await page.addInitScript(() => Object.defineProperty(navigator, 'canShare', { value: undefined }));
+  await page.goto('/quiz?d=10&p=75&b=sin&s=0&c=1');
+  const boton = page.getByRole('button', { name: 'Descargar tarjeta' });
+  await expect(boton).toBeEnabled();
+  const [descarga] = await Promise.all([page.waitForEvent('download'), boton.click()]);
+  expect(descarga.suggestedFilename()).toBe('rscoot-quiz.png');
+  expect(medidasPng(await readFile(await descarga.path()))).toEqual([1080, 1920]);
+  await expect(page.getByRole('button', { name: 'Tarjeta descargada' })).toBeVisible();
+  await expect(page.getByRole('button', { name: /Compartir enlace|Copiar enlace/ })).toBeVisible();
+});
+
+test('si el sistema puede, comparte la tarjeta como archivo PNG', async ({ page }) => {
+  await page.addInitScript(() => {
+    const w = window as unknown as { compartido: { nombre: string; tipo: string; bytes: number }[] };
+    w.compartido = [];
+    Object.defineProperty(navigator, 'canShare', { value: (d: ShareData) => !!d.files?.length });
+    Object.defineProperty(navigator, 'share', {
+      value: async (d: ShareData) => d.files?.forEach((f) => w.compartido.push({ nombre: f.name, tipo: f.type, bytes: f.size })),
+    });
+  });
+  await page.goto('/quiz?d=10&p=75&b=sin&s=0&c=1');
+  await page.getByRole('button', { name: 'Compartir tarjeta' }).click();
+  const compartido = await page.evaluate(() => (window as unknown as { compartido: unknown[] }).compartido);
+  expect(compartido).toEqual([{ nombre: 'rscoot-quiz.png', tipo: 'image/png', bytes: expect.any(Number) }]);
+  await expect(page.locator('[data-estado]')).toHaveText('Tarjeta compartida');
 });
 
 test('si nada cumple lo dice y marca los más cercanos', async ({ page }) => {

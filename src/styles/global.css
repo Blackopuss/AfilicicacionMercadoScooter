@@ -136,6 +136,11 @@
     animation: grow-x 1.6s cubic-bezier(0.65, 0, 0.35, 1) both;
     animation-delay: calc(var(--i, 0) * 250ms + 200ms);
   }
+  /* SVG line that draws itself; the path needs pathLength="1" */
+  .draw {
+    stroke-dasharray: 1;
+    animation: draw 1.6s cubic-bezier(0.65, 0, 0.35, 1) 0.4s both;
+  }
   .reveal {
     animation: reveal 0.8s cubic-bezier(0.22, 1, 0.36, 1) both;
     animation-delay: calc(var(--i, 0) * 90ms);
@@ -190,6 +195,11 @@
   from {
     opacity: 0;
     translate: 0 32px;
+  }
+}
+@keyframes draw {
+  from {
+    stroke-dashoffset: 1;
   }
 }
 @keyframes rise-num {

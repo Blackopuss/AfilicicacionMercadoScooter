@@ -1,16 +1,27 @@
 ---
 import Layout from '../layouts/Layout.astro';
 import Icon from '../components/Icon.astro';
+import Precio from '../components/Precio.astro';
+import { autonomiaReal } from '../lib/autonomia';
+import { bajadasSemana, DIAS_BAJADA } from '../lib/bajadas';
 import { getCatalogo } from '../lib/coleccion';
+import { formatoPrecio } from '../lib/formato';
+import { getHistorial } from '../lib/historial';
 
-// shortcut: value props until real price drops exist; swap for "↓ [modelo] bajó X %" items in the data phase.
-const ticker = [
-  'Precio verificado hoy',
-  'Autonomía real, no la del folleto',
-  'Historial de 90 días',
-  'Todo México',
-  'Alertas de precio',
-];
+const catalogo = await getCatalogo();
+const porSlug = new Map(catalogo.map((s) => [s.slug, s]));
+const bajadas = bajadasSemana(
+  await Promise.all(catalogo.map(async (s) => ({ slug: s.slug, puntos: await getHistorial(s.slug, DIAS_BAJADA) }))),
+).map((b) => ({ ...b, scooter: porSlug.get(b.slug)! }));
+
+// Without price drops this week (or without prices at all) the ticker keeps the value props.
+const ticker = bajadas.length
+  ? bajadas.map((b) => `↓ ${b.scooter.marca} ${b.scooter.modelo} bajó ${b.porcentaje} %`)
+  : ['Precio verificado hoy', 'Autonomía real, no la del folleto', 'Historial de 90 días', 'Todo México', 'Alertas de precio'];
+
+// Teaser del mapa: ida y vuelta de 10 km con la autonomía real de cada modelo (75 kg, plano).
+const RUTA_KM = 20;
+const llegan = catalogo.filter((s) => autonomiaReal(s) >= RUTA_KM).length;
 
 const features = [
   { title: 'Precio de hoy', text: 'Verificado a mano cada mañana. Siempre con fecha.' },
@@ -21,7 +32,7 @@ const features = [
   { title: 'Alertas', text: 'Te avisamos cuando el scooter que quieres baje de precio.' },
 ];
 
-const top = (await getCatalogo()).slice(0, 3);
+const top = catalogo.slice(0, 3);
 
 const bars = [
   { label: 'Lo que dice el folleto', width: 100, accent: false },
@@ -84,6 +95,35 @@ const bars = [
       )}
     </div>
   </div>
+
+  <!-- Bajadas de la semana: only when there are real price drops -->
+  {
+    bajadas.length > 0 && (
+      <section class="container-page pt-20" aria-labelledby="bajadas-title">
+        <div class="reveal flex flex-wrap items-end justify-between gap-4 border-b-2 border-line pb-4" data-reveal>
+          <h2 id="bajadas-title" class="font-display text-[clamp(36px,5vw,64px)] leading-[0.9] tracking-[-0.03em] uppercase">
+            Bajaron esta semana
+          </h2>
+          <p class="font-semibold">Contra su precio más alto de los últimos {DIAS_BAJADA} días</p>
+        </div>
+        <ul class="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3" data-reveal>
+          {bajadas.slice(0, 6).map((b, i) => (
+            <li class="reveal card card-lift relative p-6" style={`--i:${i}`}>
+              <p class="inline-block bg-accent px-2 font-display text-3xl text-on-accent">↓ {b.porcentaje} %</p>
+              <p class="label mt-4">{b.scooter.marca}</p>
+              <h3 class="mt-1 text-2xl font-bold">
+                <a href={`/scooter/${b.slug}`} class="after:absolute after:inset-0">{b.scooter.modelo}</a>
+              </h3>
+              <div class="mt-3">
+                <Precio precio={{ precioMxn: b.precioMxn, disponible: true, verificadoEn: b.verificadoEn }} class="text-4xl" />
+              </div>
+              <p class="mt-1 text-sm text-muted">Antes <s>{formatoPrecio(b.antesMxn)}</s></p>
+            </li>
+          ))}
+        </ul>
+      </section>
+    )
+  }
 
   <!-- Features -->
   <section class="container-page pt-20" aria-labelledby="features-title">
@@ -150,6 +190,54 @@ const bars = [
           </div>
         </div>
       ))}
+    </div>
+  </section>
+
+  <!-- Teaser del mapa: own SVG, MapLibre only loads on /mapa -->
+  <section class="container-page mt-24 grid items-center gap-10 lg:grid-cols-2" aria-labelledby="mapa-title" data-reveal>
+    <div class="reveal min-w-0">
+      <p class="label">Mapa de autonomía</p>
+      <h2 id="mapa-title" class="mt-3 font-display text-[clamp(36px,5vw,64px)] leading-[0.9] tracking-[-0.03em] uppercase">
+        ¿Llegas <span class="mt-1 inline-block bg-accent px-2 text-on-accent">o no?</span>
+      </h2>
+      <p class="mt-5 text-lg leading-relaxed text-pretty">
+        Pon tu ruta y te decimos qué scooters la aguantan de ida y vuelta, con su autonomía real y la batería que les
+        sobra.
+      </p>
+      <p class="mt-6 border-l-4 border-accent pl-4">
+        <span class="font-display text-5xl tabular-nums">{llegan} de {catalogo.length}</span>
+        <span class="block font-semibold">modelos aguantan {RUTA_KM / 2} km de ida y {RUTA_KM / 2} de vuelta en ciudad</span>
+      </p>
+      <a href="/mapa" class="btn btn-ink mt-8">
+        Probar mi ruta
+        <Icon name="map" class="size-4" />
+      </a>
+    </div>
+    <div class="reveal card relative min-w-0 overflow-hidden" style="--i:1">
+      <svg viewBox="0 0 400 260" class="block h-auto w-full bg-surface-2" role="img" aria-label="Ilustración: una ruta en la ciudad del punto A al punto B">
+        <g class="stroke-surface" stroke-width="10" fill="none">
+          <path d="M0 60H400M0 140H400M0 215H400M70 0V260M170 0V260M265 0V260M350 0V260" />
+        </g>
+        <path d="M-10 250 L120 100 L230 40 L410 10" class="stroke-surface" stroke-width="16" fill="none" />
+        <path
+          d="M70 215V140H170V60H265V140H350"
+          pathLength="1"
+          class="draw stroke-accent"
+          stroke-width="7"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          fill="none"
+        />
+        <g class="font-display" font-size="16" text-anchor="middle">
+          <circle cx="70" cy="215" r="16" class="fill-fg" />
+          <text x="70" y="221" class="fill-bg">A</text>
+          <circle cx="350" cy="140" r="16" class="fill-fg" />
+          <text x="350" y="146" class="fill-bg">B</text>
+        </g>
+      </svg>
+      <p class="absolute top-3 left-3 border-2 border-line bg-surface px-3 py-1 text-sm font-bold" aria-hidden="true">
+        Ruta en bici · ida y vuelta
+      </p>
     </div>
   </section>
 
