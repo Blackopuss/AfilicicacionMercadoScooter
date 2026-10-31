@@ -9,7 +9,9 @@
       "autodiscoverUrlBlocklist": [
         "/admin/index.html",
         "/alertas/baja/index.html",
-        "/alertas/confirmada/index.html"
+        "/alertas/confirmada/index.html",
+        "/alertas/confirmar/index.html",
+        "/alertas/dar-de-baja/index.html"
       ],
       "maxAutodiscoverUrls": 10
     },
