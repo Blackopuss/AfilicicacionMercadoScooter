@@ -1,7 +1,8 @@
 import { z } from 'astro/zod';
 
 // Hosts de Mercado Libre aceptados en linkAfiliado (seguridad.md §3: lista blanca).
-const HOST_MERCADO_LIBRE = /^([a-z0-9-]+\.)*mercadolibre\.com(\.mx)?$/;
+// meli.la es el link corto que genera el propio programa de afiliados; solo el host exacto, sin subdominios.
+const HOST_MERCADO_LIBRE = /^(([a-z0-9-]+\.)*mercadolibre\.com(\.mx)?|meli\.la)$/;
 
 export const CATEGORIAS = ['urbano', 'todoterreno', 'plegable', 'larga-autonomia'] as const;
 
