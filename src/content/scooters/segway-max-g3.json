@@ -1,0 +1,29 @@
+{
+  "marca": "Segway",
+  "modelo": "Max G3",
+  "autonomiaFabricanteKm": 80,
+  "velocidadMaxKmh": 45,
+  "potenciaW": 850,
+  "potenciaPicoW": 2000,
+  "bateriaWh": 597,
+  "voltajeV": 46.8,
+  "pesoKg": 24.6,
+  "cargaMaxKg": 130,
+  "ruedaPulgadas": 11,
+  "tipoRueda": "tubeless",
+  "proteccionIP": "IPX6",
+  "plegable": true,
+  "suspension": "doble",
+  "frenos": "Disco delantero y disco trasero",
+  "pendienteMaxPct": 30,
+  "tiempoCargaH": 3.5,
+  "categorias": [
+    "urbano",
+    "larga-autonomia"
+  ],
+  "fuenteSpecs": "https://store-mx.segway.com/ninebot-kickscooter-max-g3",
+  "linkAfiliado": "https://meli.la/1qbgPWW",
+  "tipoVendedor": "oficial",
+  "foto": null,
+  "activo": true
+}
