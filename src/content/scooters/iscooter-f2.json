@@ -1,0 +1,28 @@
+{
+  "marca": "iScooter",
+  "modelo": "F2",
+  "autonomiaFabricanteKm": 30,
+  "velocidadMaxKmh": 30,
+  "potenciaW": 500,
+  "potenciaPicoW": null,
+  "bateriaWh": 280.8,
+  "voltajeV": 36,
+  "pesoKg": 17.5,
+  "cargaMaxKg": 120,
+  "ruedaPulgadas": 10,
+  "tipoRueda": "neumatica",
+  "proteccionIP": null,
+  "plegable": true,
+  "suspension": "ninguna",
+  "frenos": "Doble freno de disco",
+  "pendienteMaxPct": 15,
+  "tiempoCargaH": 6,
+  "categorias": [
+    "urbano"
+  ],
+  "fuenteSpecs": "https://iscooter.com.mx/products/f2-patinete-electrico-con-asiento-y-neumatico-de-10-pulgadas",
+  "linkAfiliado": "https://meli.la/2qme8c5",
+  "tipoVendedor": "oficial",
+  "foto": null,
+  "activo": true
+}
