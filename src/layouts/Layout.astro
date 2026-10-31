@@ -174,6 +174,19 @@ const ld = (d: Record<string, unknown>) => JSON.stringify(d).replace(/</g, '\u00
     <AlertaPopup />
 
     <script>
+      // Contador anónimo de clics en los links de afiliado con data-scooter y data-lugar (src/lib/clics.ts, /api/clic).
+      // No toca la navegación: el link abre Mercado Libre tal cual y el beacon sale aparte, sin cookies ni identificadores.
+      // auxclick: clic con la rueda (abre en otra pestaña), que no dispara click; el derecho (button 2) no cuenta.
+      for (const tipo of ['click', 'auxclick'] as const) {
+        document.addEventListener(tipo, (e) => {
+          if (e.button > 1) return;
+          const a = (e.target as Element).closest<HTMLAnchorElement>('a[rel~="sponsored"][data-scooter][data-lugar]');
+          if (a) navigator.sendBeacon?.('/api/clic', JSON.stringify({ slug: a.dataset.scooter, lugar: a.dataset.lugar }));
+        });
+      }
+    </script>
+
+    <script>
       const root = document.documentElement;
       document.querySelector('[data-theme-toggle]')?.addEventListener('click', () => {
         const isDark =

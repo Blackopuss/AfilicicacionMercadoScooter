@@ -44,7 +44,7 @@ A → B, quiz recomendador y guías. Monetiza con el Programa de Afiliados de Me
 - QA final (fase 9): revisión visual hecha el 30/10/2026. Falta Impeccable / `web-design-guidelines` si se instalan y Strix contra staging.
   Ojo: Astro borra el salto de línea entre un texto y la etiqueta o `{variable}` que sigue ("Fuente:" + enlace sale "Fuente:enlace"); poner `{' '}` al final de la línea.
 - Datos sin fuente: `potenciaPicoW` en 3 modelos y `proteccionIP` en 2.
-- Cloudflare Web Analytics: al activarlo, añadir sus dominios al CSP (`docs/seguridad.md` §5).
+- Cloudflare Web Analytics: el CSP ya lo permite (`docs/seguridad.md` §5); falta activarlo en el panel de Cloudflare. Los clics en links de afiliado los cuenta `/api/clic` (migración 0003, panel `/admin`).
 
 ## Decisiones tomadas
 

@@ -15,6 +15,8 @@ Seguridad: todo sigue [`docs/seguridad.md`](seguridad.md). Resumen de la migraci
 | `alertas` | nada | nada | nada | todo |
 | `precios_ultimos_dos` (vista, 0002) y `registrar_avisos()` | nada | nada | nada | leer / ejecutar |
 | `auditoria` | nada | nada | nada | solo insertar y leer |
+| `clics_diarios` (0003) | nada | nada | leer | todo |
+| `sumar_clic()` (0003) | nada | nada | nada | ejecutar |
 
 ## 1. Crear el proyecto (plan Free)
 
@@ -32,6 +34,10 @@ Seguridad: todo sigue [`docs/seguridad.md`](seguridad.md). Resumen de la migraci
 ## 3. Aplicar la migración
 
 Aplica las migraciones en orden (`0001_init.sql`, `0002_alertas_avisos.sql`, …).
+
+`0003_clics.sql` crea el contador anónimo de clics en los links de afiliado: una fila por día (hora de México),
+modelo y lugar, que `/api/clic` incrementa con `sumar_clic()` (upsert: la tabla no crece por clic). Sin datos
+personales. El panel `/admin` lo muestra en "Clics de la semana".
 
 Opción A (sin instalar nada): **SQL Editor → New query**, pega el contenido de
 `supabase/migrations/0001_init.sql` y pulsa **Run**.
@@ -99,7 +105,7 @@ llevan prefijo `PUBLIC_` ni entran al repo (para `wrangler pages dev` van en `.d
 ## 7. Comprobar la seguridad
 
 - **Advisors → Security Advisor**: sin avisos de tablas sin RLS ni vistas inseguras.
-- Pruebas de RLS con pgTAP en `supabase/tests/database/rls.test.sql`. Necesitan Docker y la CLI:
+- Pruebas de RLS con pgTAP en `supabase/tests/database/` (`rls`, `alertas` y `clics`). Necesitan Docker y la CLI:
 
   ```bash
   npx supabase init      # solo la primera vez, crea supabase/config.toml

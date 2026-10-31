@@ -12,6 +12,7 @@ OWASP Top 10 (2021) y OWASP API Security Top 10 (2023), aterrizados a este stack
 | API REST de Supabase (la anon key es **pública** por diseño) | Leer o escribir tablas sin permiso si falla RLS |
 | `functions/` (Pages Functions) | Endpoints sin auth, inyección, abuso masivo |
 | Alertas de precio (emails) | Datos personales expuestos, spam, enumeración de emails |
+| Contador de clics (`/api/clic`, público y sin auth) | Inflar el contador o llenar la base: por eso es un conteo diario por modelo y lugar (lista cerrada) que solo suma, sin datos personales |
 
 Regla de oro: **todo lo que hay en el navegador es público y manipulable**. La seguridad vive en RLS y en `functions/`, nunca en ocultar botones o rutas.
 
@@ -78,8 +79,10 @@ El mapa (`/mapa`, ver `docs/mapa.md`) ya está dentro: `connect-src` añade `htt
 tiles, sprites y fuentes) e `img-src` añade `blob:` (MapLibre puede pintar imágenes desde blobs). El worker de
 MapLibre se sirve desde `/_astro/` (mismo origen) con `setWorkerUrl`, así que no hace falta `worker-src blob:`.
 Las rutas pasan por `/api/*` (mismo origen): el navegador nunca habla con Mapbox.
-Cloudflare Web Analytics inyecta su propio script: al activarlo, añadir `https://static.cloudflareinsights.com`
-a `script-src` y `https://cloudflareinsights.com` a `connect-src`.
+Cloudflare Web Analytics (inyección automática de Pages) ya está dentro: `script-src` añade
+`https://static.cloudflareinsights.com` (de ahí baja `beacon.min.js`). Con inyección automática el beacon reporta a
+`/cdn-cgi/rum` del propio dominio, así que basta `connect-src 'self'`; `https://cloudflareinsights.com` solo haría
+falta con el snippet manual (FAQ de Web Analytics de Cloudflare, revisada el 31/10/2026).
 
 **Hashes de scripts inline.** `script-src` permite cada `<script>` inline del HTML compilado por su hash.
 Hoy son dos: el de tema de `Layout.astro` (`is:inline`) y el `<script>` del menú y el botón de tema, que Astro

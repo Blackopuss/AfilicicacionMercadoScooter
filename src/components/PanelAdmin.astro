@@ -54,9 +54,23 @@ const campo = 'mt-2 block min-h-14 w-full border-2 border-line bg-surface px-4 t
       </button>
     </div>
     <p class="mt-2 text-sm text-muted">Guarda los precios del día y al final publica: el sitio se reconstruye en unos minutos.</p>
+    <section class="card mt-6 p-5" aria-labelledby="clics-titulo">
+      <h2 id="clics-titulo" class="font-display text-2xl leading-[0.95] uppercase">Clics de la semana</h2>
+      <p data-clics-total class="mt-2 text-sm text-muted">Cargando…</p>
+      <div class="mt-4 grid gap-6 md:grid-cols-2">
+        <div>
+          <p class="label">Por modelo</p>
+          <ol data-clics="modelo" class="mt-2 text-sm"></ol>
+        </div>
+        <div>
+          <p class="label">Por lugar</p>
+          <ol data-clics="lugar" class="mt-2 text-sm"></ol>
+        </div>
+      </div>
+    </section>
     <ul class="mt-6 grid gap-4 md:grid-cols-2">
       {scooters.map((s) => (
-        <li class="card p-5" data-slug={s.slug}>
+        <li class="card p-5" data-slug={s.slug} data-nombre={`${s.marca} ${s.modelo}`}>
           <p class="label">{s.marca}</p>
           <h2 class="mt-1 font-display text-2xl leading-[0.95] uppercase">{s.modelo}</h2>
           <p class="mt-2 text-sm text-muted">
@@ -99,6 +113,7 @@ const campo = 'mt-2 block min-h-14 w-full border-2 border-line bg-surface px-4 t
   import { createClient, type SupabaseClient } from '@supabase/supabase-js';
   import { formatoFecha, formatoPrecio } from '../lib/formato';
   import { esPrecioValido } from '../lib/precios';
+  import { desdeSemana, resumirClics, type Conteo, type FilaClic } from '../lib/clics';
 
   type Fila = { scooter_slug?: string; precio_mxn: number; disponible: boolean; verificado_en: string };
 
@@ -161,9 +176,36 @@ const campo = 'mt-2 block min-h-14 w-full border-2 border-line bg-surface px-4 t
     async function abrirPanel() {
       if (!panel.firstElementChild) panel.append($<HTMLTemplateElement>('#tpl-panel').content.cloneNode(true));
       mostrar('panel');
+      pintarClics();
       const { data, error } = await sb.from('precios_actuales').select('scooter_slug, precio_mxn, disponible, verificado_en');
       if (error) return avisar('No se pudieron leer los últimos precios.');
       for (const f of data as Fila[]) pintarUltimo(f.scooter_slug!, f);
+    }
+
+    async function pintarClics() {
+      const total = $<HTMLElement>('[data-clics-total]', panel);
+      const { data, error } = await sb.from('clics_diarios').select('scooter_slug, lugar, total').gte('dia', desdeSemana(new Date()));
+      if (error) return (total.textContent = 'No se pudieron leer los clics.');
+      const r = resumirClics(data as FilaClic[]);
+      const n = (x: number) => x.toLocaleString('es-MX');
+      total.textContent = r.total ? `${n(r.total)} clics en los links de afiliado en los últimos 7 días.` : 'Sin clics en los últimos 7 días.';
+      const nombre = (slug: string) => panel.querySelector<HTMLElement>(`li[data-slug="${CSS.escape(slug)}"]`)?.dataset.nombre ?? slug;
+      const lista = (cual: string, filas: Conteo[], etiqueta: (k: string) => string) =>
+        $<HTMLElement>(`[data-clics="${cual}"]`, panel).replaceChildren(
+          ...filas.map(([k, v]) => {
+            const li = document.createElement('li');
+            li.className = 'flex justify-between gap-4 border-b border-line py-2';
+            const izq = document.createElement('span');
+            izq.textContent = etiqueta(k);
+            const der = document.createElement('span');
+            der.className = 'font-bold tabular-nums';
+            der.textContent = n(v);
+            li.append(izq, der);
+            return li;
+          }),
+        );
+      lista('modelo', r.porModelo, nombre);
+      lista('lugar', r.porLugar, (k) => k);
     }
 
     function pintarUltimo(slug: string, f: Fila) {
