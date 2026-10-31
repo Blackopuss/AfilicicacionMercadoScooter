@@ -37,7 +37,7 @@ Falta que el dueño abra el PR `desarrollo` → `main`.
 3. **Fotos de los modelos** (`src/content/scooters/*.json`, campo `foto`): de prensa del fabricante o propias. El catálogo ya es el de México (Segway, iScooter y Honey Whale de sus tiendas oficiales en Mercado Libre) con su `linkAfiliado`; las fuentes de cada dato están en `docs/fuentes-specs/`.
 4. **Legal** (`docs/legal.md`): llenar los placeholders del aviso de privacidad y que lo revise un abogado antes de captar emails.
 5. **Decisiones**:
-   - Confirmar con Mapbox que su buscador y sus rutas se pueden usar sobre un mapa MapLibre en un sitio comercial; si no, cambiar el proveedor en `functions/_lib/rutas.ts`.
+   - Confirmar con Mapbox que sus rutas se pueden usar sobre un mapa MapLibre en un sitio comercial; si no, cambiar el proveedor en `functions/_lib/rutas.ts`. El buscador ya no usa Mapbox (Photon).
    - Régimen fiscal con un contador.
 6. **Programa de afiliados**: declarar la web y las redes como Medios.
 
@@ -99,7 +99,7 @@ precio real de hoy y su historial*.
 | Hosting y funciones | Cloudflare Pages + Pages Functions (para ocultar API keys) |
 | Base de datos y login del panel | Supabase (Postgres, login por enlace mágico solo a tu email, Row Level Security) |
 | Mapa | MapLibre + OpenFreeMap |
-| Rutas A → B | Mapbox Directions (perfil ciclismo) y Geocoding detrás de `functions/_lib/rutas.ts`; licencia por confirmar (`docs/mapa.md`). Sin token, `/mapa` usa el cálculo manual por km |
+| Rutas A → B | Buscador de direcciones con Photon (OpenStreetMap, gratis y sin clave, desde el navegador). Ruta con Mapbox Directions (perfil ciclismo) detrás de `functions/_lib/rutas.ts`; licencia por confirmar (`docs/mapa.md`). Sin token, `/mapa` estima la distancia en línea recta × 1.3 y lo dice |
 | Gráficas de precio | SVG propio sin dependencias (`HistorialPrecio.astro`) |
 | Emails | Brevo (plan gratis) |
 | Analítica | Cloudflare Web Analytics (sin cookies) |

@@ -7,7 +7,8 @@ import { scooterSchema } from './lib/scooter';
 // Un archivo JSON por modelo; el nombre del archivo es el slug.
 const scooters = defineCollection({
   loader: glob({ pattern: '*.json', base: './src/content/scooters' }),
-  schema: scooterSchema,
+  // foto: ruta relativa al JSON (../../assets/scooters/<slug>.webp), del fabricante o propia; null = placeholder.
+  schema: ({ image }) => scooterSchema.extend({ foto: image().nullable() }),
 });
 
 // Guías en Markdown; el nombre del archivo es el slug.

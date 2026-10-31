@@ -1,6 +1,7 @@
 ---
 import Layout from '../../layouts/Layout.astro';
 import Icon from '../../components/Icon.astro';
+import FotoScooter from '../../components/FotoScooter.astro';
 import Precio from '../../components/Precio.astro';
 import { getCatalogo, type ScooterCatalogo } from '../../lib/coleccion';
 import { CATEGORIAS_MEJORES, MEJORES, ranking, type CategoriaMejores } from '../../lib/mejores';
@@ -48,9 +49,12 @@ const otras = CATEGORIAS_MEJORES.filter((c) => c !== categoria);
         <ol class="mt-10 grid gap-5">
           {modelos.map((s, i) => (
             <li class="card grid gap-4 p-6 md:grid-cols-[auto_1fr_auto] md:items-center">
-              <p class="font-display text-5xl leading-none text-accent-ink tabular-nums" aria-hidden="true">
-                {i + 1}
-              </p>
+              <div class="flex items-center gap-4">
+                <p class="w-[2ch] font-display text-5xl leading-none text-accent-ink tabular-nums" aria-hidden="true">
+                  {i + 1}
+                </p>
+                <FotoScooter foto={s.foto} nombre={`${s.marca} ${s.modelo}`} widths={[112, 224]} sizes="112px" compacta class="size-28 shrink-0 border-2 border-line" />
+              </div>
               <div>
                 <p class="label">{s.marca}</p>
                 <h2 class="mt-1 text-2xl font-bold">

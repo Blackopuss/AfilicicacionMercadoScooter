@@ -1,9 +1,11 @@
 ---
+import { getImage } from 'astro:assets';
 import Layout from '../../layouts/Layout.astro';
 import Icon from '../../components/Icon.astro';
 import Precio from '../../components/Precio.astro';
 import HistorialPrecio from '../../components/HistorialPrecio.astro';
 import AlertaForm from '../../components/AlertaForm.astro';
+import FotoScooter from '../../components/FotoScooter.astro';
 import { getCatalogo, type ScooterCatalogo } from '../../lib/coleccion';
 import { autonomiaReal, PESO_REFERENCIA_KG } from '../../lib/autonomia';
 import { alternativasMasBaratas } from '../../lib/comparar';
@@ -29,6 +31,8 @@ const barras = CLAVE.map((c) => ({ ...c, pct: percentil(c.campo, s, catalogo) })
 const alternativas = alternativasMasBaratas(s, catalogo);
 const caraACara = rivales(s, catalogo);
 const descripcion = `${nombre}: ${s.puntuacion}/100 en nuestra puntuación, ${real} km de autonomía real (${s.autonomiaFabricanteKm} km según el fabricante), ${s.velocidadMaxKmh} km/h y ${s.pesoKg} kg. Precio en México con fecha de verificación.`;
+// JSON-LD pide URL absoluta de la imagen: una versión WebP de 1200 px.
+const imagen = s.foto && (await getImage({ src: s.foto, width: Math.min(1200, s.foto.width), format: 'webp' }));
 // Sin calificaciones ni reseñas: solo datos del fabricante y, si existe, el precio verificado.
 const producto = {
   '@context': 'https://schema.org',
@@ -38,6 +42,7 @@ const producto = {
   model: s.modelo,
   category: 'Scooter eléctrico',
   description: descripcion,
+  ...(imagen && { image: new URL(imagen.src, Astro.site).href }),
   ...(s.precio && {
     offers: {
       '@type': 'Offer',
@@ -78,12 +83,14 @@ const producto = {
     </ul>
 
     <div class="mt-8 grid gap-6 md:grid-cols-2">
-      <div class="card grid aspect-[4/3] place-items-center bg-surface-2 text-muted" role="img" aria-label={`Foto de ${nombre} pendiente`}>
-        <div class="grid justify-items-center gap-2">
-          <Icon name="zap" class="size-12" />
-          <span class="label">Foto pendiente</span>
-        </div>
-      </div>
+      <FotoScooter
+        foto={s.foto}
+        nombre={nombre}
+        widths={[480, 720, 960, 1280]}
+        sizes="(min-width: 768px) 50vw, 100vw"
+        principal
+        class="card aspect-[4/3]"
+      />
 
       <div class="flex flex-col gap-6">
         <div class="card p-6">

@@ -1,6 +1,7 @@
 ---
 import Layout from '../../layouts/Layout.astro';
 import Icon from '../../components/Icon.astro';
+import FotoScooter from '../../components/FotoScooter.astro';
 import Precio from '../../components/Precio.astro';
 import { getCatalogo, type ScooterCatalogo } from '../../lib/coleccion';
 import { autonomiaReal } from '../../lib/autonomia';
@@ -63,6 +64,13 @@ const h2 = 'font-display text-[clamp(32px,5vw,56px)] leading-[0.9] tracking-[-0.
       {
         [a, b].map((s, i) => (
           <div class="card p-6">
+            <FotoScooter
+              foto={s.foto}
+              nombre={`${s.marca} ${s.modelo}`}
+              widths={[400, 640, 800]}
+              sizes="(min-width: 640px) 50vw, 100vw"
+              class="-mx-6 -mt-6 mb-6 aspect-[4/3] border-b-2 border-line"
+            />
             <p class="label">{s.marca}</p>
             <h2 class="mt-1 text-2xl font-bold">{s.modelo}</h2>
             <p class="mt-3 font-display text-6xl leading-none tabular-nums">
