@@ -1,0 +1,30 @@
+{
+  "marca": "Segway",
+  "modelo": "ZT3 Pro",
+  "autonomiaFabricanteKm": 70,
+  "velocidadMaxKmh": 40,
+  "potenciaW": 650,
+  "potenciaPicoW": 1600,
+  "bateriaWh": 597,
+  "voltajeV": 46.8,
+  "pesoKg": 29.7,
+  "cargaMaxKg": 120,
+  "ruedaPulgadas": 11,
+  "tipoRueda": "tubeless",
+  "proteccionIP": "IPX5",
+  "plegable": true,
+  "suspension": "doble",
+  "frenos": "Disco delantero, disco trasero y electrónico",
+  "pendienteMaxPct": 25,
+  "tiempoCargaH": 4,
+  "categorias": [
+    "urbano",
+    "todoterreno",
+    "larga-autonomia"
+  ],
+  "fuenteSpecs": "https://store-mx.segway.com/segway-zt3-pro",
+  "linkAfiliado": "https://meli.la/1xXd9kq",
+  "tipoVendedor": "oficial",
+  "foto": null,
+  "activo": true
+}
