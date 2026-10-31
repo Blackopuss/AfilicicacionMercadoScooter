@@ -28,7 +28,7 @@ Criterios comunes (los mismos del lote A, `docs/fuentes-specs/honey-whale-a.md`)
 
 - `pendienteMaxPct`: Honey Whale publica la pendiente en grados. Se convirtió con `tan(θ) × 100`, redondeado:
   15° → 27 %, 20° → 36 %, 25° → 47 %. **(derivado)**
-- `bateriaWh`: `null` en todos. Las fuentes dan voltios y amperios-hora, no Wh.
+- `bateriaWh`: calculado como voltios nominales × amperios-hora de la misma fuente (las fuentes no dan Wh), igual que en `iscooter.md`. Los Ah de cada modelo están en su fila `voltajeV`.
 - `voltajeV`: el nominal. Algunas fichas publican el voltaje máximo de carga (54.6 V en baterías de 48 V,
   67.2 V en las de 60 V); los manuales lo separan como "Tensión máxima de trabajo".
 - `tipoRueda`: "Neumáticos de vacío" o "tubeless" → `tubeless`; "Neumáticos inflables (con cámara)" → `neumatica`.
