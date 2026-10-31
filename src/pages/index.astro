@@ -1,6 +1,7 @@
 ---
 import Layout from '../layouts/Layout.astro';
 import Icon from '../components/Icon.astro';
+import FotoScooter from '../components/FotoScooter.astro';
 import Precio from '../components/Precio.astro';
 import { autonomiaReal } from '../lib/autonomia';
 import { bajadasSemana, DIAS_BAJADA } from '../lib/bajadas';
@@ -157,6 +158,13 @@ const bars = [
     <ol class="mt-8 grid gap-5 md:grid-cols-3" data-reveal>
       {top.map((s, i) => (
         <li class="reveal card card-lift relative p-6" style={`--i:${i}`}>
+          <FotoScooter
+            foto={s.foto}
+            nombre={`${s.marca} ${s.modelo}`}
+            widths={[400, 640, 800]}
+            sizes="(min-width: 768px) 33vw, 100vw"
+            class="-mx-6 -mt-6 mb-6 aspect-[4/3] border-b-2 border-line"
+          />
           <p class="overflow-hidden font-display text-7xl leading-none">
             <span class="rise-num" style={`--i:${i}`}>{String(i + 1).padStart(2, '0')}</span>
           </p>

@@ -1,3 +1,4 @@
+import type { ImageMetadata } from 'astro';
 import { z } from 'astro/zod';
 
 // Hosts de Mercado Libre aceptados en linkAfiliado (seguridad.md §3: lista blanca).
@@ -30,11 +31,11 @@ export const scooterSchema = z.strictObject({
   fuenteSpecs: z.url({ protocol: /^https$/ }),
   linkAfiliado: z.url({ protocol: /^https$/, hostname: HOST_MERCADO_LIBRE }).nullable(),
   tipoVendedor: z.enum(['oficial', 'verde', 'amarilla']).nullable(),
-  foto: z.null(), // pasará a image() cuando haya fotos del fabricante o propias
+  foto: z.null(), // content.config.ts la cambia por image(): el helper solo existe dentro de Astro
   activo: z.boolean(),
 });
 
-export type ScooterSpecs = z.infer<typeof scooterSchema>;
+export type ScooterSpecs = Omit<z.infer<typeof scooterSchema>, 'foto'> & { foto: ImageMetadata | null };
 export type Categoria = (typeof CATEGORIAS)[number];
 /** Un modelo del catálogo: sus specs más el slug (nombre del archivo). */
 export type Scooter = ScooterSpecs & { slug: string };
