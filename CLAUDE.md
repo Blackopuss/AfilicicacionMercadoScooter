@@ -47,7 +47,7 @@ src/
   layouts/Layout.astro head, tema, header, footer
   components/          componentes .astro reutilizables (Icon.astro = iconos Lucide inline)
   pages/               rutas (file routing de Astro)
-  content/scooters/    16 modelos (JSON, esquema en src/content.config.ts); linkAfiliado y foto los pone el dueño
+  content/scooters/    modelos de Segway, iScooter y Honey Whale vendidos en México (JSON, esquema en src/content.config.ts; fuentes en docs/fuentes-specs/); foto la pone el dueño
   content/guias/       guías en Markdown
   lib/                 lógica pura en TS: puntuación, autonomía real, percentiles, recomendar, comparar, precios, historial; sin DOM, con pruebas
 functions/api/         Cloudflare Pages Functions: publicar, alertas (alta/confirmar/baja), ruta, geocode (lo único con secretos)

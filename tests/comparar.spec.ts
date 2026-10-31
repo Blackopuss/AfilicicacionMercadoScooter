@@ -48,15 +48,15 @@ test.describe('/comparar en escritorio', () => {
 
   test('selecciona dos y los compara con ?m=', async ({ page }) => {
     await page.goto('/comparar');
-    await page.getByRole('checkbox', { name: 'Comparar Xiaomi Electric Scooter 5' }).check();
-    await page.getByRole('checkbox', { name: 'Comparar Segway-Ninebot Max G2' }).check();
+    await page.getByRole('checkbox', { name: 'Comparar Segway E3 Pro' }).check();
+    await page.getByRole('checkbox', { name: 'Comparar Segway Max G3' }).check();
     await page.getByRole('button', { name: 'Comparar (2)' }).click();
-    await expect(page).toHaveURL(/\?m=xiaomi-electric-scooter-5,segway-ninebot-max-g2/);
+    await expect(page).toHaveURL(/\?m=segway-e3-pro,segway-max-g3/);
     await expect(page.locator('#lado-a-lado')).toBeVisible();
   });
 
   test('un enlace ?m= abre la vista lado a lado con el ganador marcado', async ({ page }) => {
-    await page.goto('/comparar?m=xiaomi-electric-scooter-5,segway-ninebot-max-g2,no-existe');
+    await page.goto('/comparar?m=segway-e3-pro,segway-max-g3,no-existe');
     const vista = page.locator('#lado-a-lado');
     await expect(vista).toBeVisible();
     await expect(vista.locator('thead th:visible')).toHaveCount(2);
@@ -78,7 +78,7 @@ test.describe('sin JavaScript', () => {
 });
 
 test('la ficha recalcula la autonomía real con tu peso y subidas', async ({ page }) => {
-  await page.goto('/scooter/xiaomi-electric-scooter-5');
+  await page.goto('/scooter/segway-e3-pro');
   const km = page.locator('[data-km-real]');
   const base = Number(await km.textContent());
   await page.getByLabel('Tu peso (kg)').fill('110');
