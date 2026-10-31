@@ -47,6 +47,10 @@ describe('scooterSchema', () => {
     expect(scooterSchema.safeParse({ ...base, linkAfiliado: 'https://articulo.mercadolibre.com.mx/MLM-1' }).success).toBe(
       true,
     );
+    expect(scooterSchema.safeParse({ ...base, linkAfiliado: 'https://meli.la/1FZMRFY' }).success).toBe(true);
+    for (const malo of ['http://meli.la/1FZMRFY', 'https://x.meli.la/1', 'https://meli.la.evil.example/1', 'https://melixla/1']) {
+      expect(scooterSchema.safeParse({ ...base, linkAfiliado: malo }).success).toBe(false);
+    }
   });
   it('valida el código IP', () => {
     expect(scooterSchema.safeParse({ ...base, proteccionIP: 'IPX5' }).success).toBe(true);
