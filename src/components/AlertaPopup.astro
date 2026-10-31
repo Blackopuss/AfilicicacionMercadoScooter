@@ -1,6 +1,6 @@
 ---
-// Popup de salida con el formulario de alerta. <dialog> con showModal(): role dialog, aria-modal, foco atrapado,
-// Esc y foco devuelto al cerrar los da el navegador. Máximo una vez cada 7 días.
+// Popup con el formulario de alerta. <dialog> con showModal(): role dialog, aria-modal, foco atrapado,
+// Esc y foco devuelto al cerrar los da el navegador. Máximo una vez cada 7 días; cuándo, en src/lib/popup.ts.
 import AlertaForm from './AlertaForm.astro';
 import Icon from './Icon.astro';
 
@@ -35,14 +35,25 @@ const oculto = /^\/(admin|aviso-de-privacidad|alertas)(\/|$)/.test(path);
 }
 
 <script>
+  import { MAX_VISITA_MS, tocaPopup, type Senal } from '../lib/popup';
+
   const dialog = document.querySelector<HTMLDialogElement>('[data-alerta-popup]');
   const CLAVE = 'alertaPopupVisto';
   const SEMANA = 7 * 24 * 60 * 60 * 1000;
 
   if (dialog) {
     let visto: boolean;
+    // La visita dura mientras la pestaña siga abierta (sessionStorage): su inicio y las fichas vistas.
+    let inicio = Date.now();
+    let fichas: string[] = [];
     try {
       visto = Date.now() - Number(localStorage.getItem(CLAVE) ?? 0) < SEMANA;
+      inicio = Number(sessionStorage.getItem('visitaInicio')) || inicio;
+      fichas = JSON.parse(sessionStorage.getItem('fichasVistas') ?? '[]');
+      const ficha = location.pathname.match(/^\/scooter\/([a-z0-9-]+)\/?$/)?.[1];
+      if (ficha && !fichas.includes(ficha)) fichas.push(ficha);
+      sessionStorage.setItem('visitaInicio', String(inicio));
+      sessionStorage.setItem('fichasVistas', JSON.stringify(fichas));
     } catch {
       visto = true; // sin storage no se puede respetar el límite de 7 días: mejor no mostrarlo
     }
@@ -50,24 +61,28 @@ const oculto = /^\/(admin|aviso-de-privacidad|alertas)(\/|$)/.test(path);
     const escritorio = matchMedia('(hover: hover) and (pointer: fine)').matches;
     // Escritorio: el cursor sale por arriba de la ventana (hacia pestañas o barra de direcciones).
     const salida = (e: MouseEvent) => {
-      if (!e.relatedTarget && e.clientY <= 0) abrir();
+      if (!e.relatedTarget && e.clientY <= 0) abrir('salida');
     };
-    // Móvil: 60 % de la página recorrida o 45 s en ella.
+    // Móvil: terminó de leer (60 % de la página recorrida).
     const scroll = () => {
       const recorrido = scrollY / (document.documentElement.scrollHeight - innerHeight);
-      if (recorrido >= 0.6) abrir();
+      if (recorrido >= 0.6) abrir('scroll');
     };
-    const timer = escritorio || visto ? 0 : setTimeout(() => abrir(), 45_000);
+    const timer = visto ? 0 : setTimeout(() => abrir('tiempo'), Math.max(0, inicio + MAX_VISITA_MS - Date.now()));
 
-    function abrir() {
+    function abrir(senal: Senal) {
+      if (visto || document.querySelector('dialog[open]') || !tocaPopup(Date.now() - inicio, fichas.length, senal)) return;
+      visto = true;
       document.removeEventListener('mouseout', salida);
       removeEventListener('scroll', scroll);
       clearTimeout(timer);
-      if (visto || document.querySelector('dialog[open]')) return;
-      visto = true;
       try {
         localStorage.setItem(CLAVE, String(Date.now()));
       } catch {}
+      // Fuera de una ficha, el modelo que más le interesó es el último que vio.
+      const modelo = dialog!.querySelector<HTMLSelectElement>('select[name="slug"]');
+      const ultima = fichas.at(-1);
+      if (modelo && ultima && !modelo.value && [...modelo.options].some((o) => o.value === ultima)) modelo.value = ultima;
       dialog!.showModal();
     }
 

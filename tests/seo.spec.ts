@@ -26,7 +26,6 @@ const jsonLd = async (page: import('@playwright/test').Page) =>
 test('canonical, Open Graph y datos estructurados', async ({ page }) => {
   await page.goto('/scooter/segway-e3-pro');
   await expect(page.locator('link[rel=canonical]')).toHaveAttribute('href', /^https:\/\/.+\/scooter\/segway-e3-pro\/$/);
-  await expect(page.locator('meta[property="og:image"]')).toHaveAttribute('content', /\/og\.png$/);
   const [migas, producto] = await jsonLd(page);
   expect(migas['@type']).toBe('BreadcrumbList');
   expect(migas.itemListElement.map((i: { name: string }) => i.name)).toEqual(['Inicio', 'Comparar', 'Segway E3 Pro']);
@@ -39,4 +38,22 @@ test('canonical, Open Graph y datos estructurados', async ({ page }) => {
 
   await page.goto('/admin');
   await expect(page.locator('link[rel=canonical]')).toHaveCount(0);
+});
+
+test('cada ficha y A vs B comparte la foto del scooter en JPEG', async ({ page, request }) => {
+  const og = (p: string) => page.locator(`meta[property="${p}"]`);
+  for (const [ruta, nombre] of [['/scooter/segway-e3-pro', 'Segway E3 Pro'], ['/comparar/segway-e3-pro-vs-segway-max-g3', 'Segway E3 Pro']]) {
+    await page.goto(ruta);
+    const src = (await og('og:image').getAttribute('content'))!;
+    expect(src).toMatch(/^https:\/\/.+\.jpe?g$/);
+    expect(src).not.toMatch(/\/og\.png$/);
+    await expect(og('og:image:alt')).toHaveAttribute('content', `Scooter eléctrico ${nombre}`);
+    await expect(page.locator('meta[name="twitter:image"]')).toHaveAttribute('content', src);
+    const imagen = await request.get(new URL(src).pathname);
+    expect(imagen.headers()['content-type']).toBe('image/jpeg');
+    expect((await imagen.body()).length).toBeLessThan(300 * 1024);
+    expect(Number(await og('og:image:width').getAttribute('content'))).toBeGreaterThan(0);
+  }
+  await page.goto('/');
+  await expect(og('og:image')).toHaveAttribute('content', /\/og\.png$/);
 });
