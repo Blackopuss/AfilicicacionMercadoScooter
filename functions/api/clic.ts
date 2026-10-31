@@ -37,7 +37,8 @@ export async function onRequest({ request, env }: Contexto): Promise<Response> {
   }
 
   try {
-    if (!(await nombresModelos(env, origen))[datos.slug]) return json(400, { error: 'Datos inválidos' });
+    // hasOwn: "constructor" pasa la regex y existe en el prototipo de cualquier objeto.
+    if (!Object.hasOwn(await nombresModelos(env, origen), datos.slug)) return json(400, { error: 'Datos inválidos' });
     const { error } = await supabase.rpc('sumar_clic', { slug: datos.slug, lugar: datos.lugar });
     if (error) throw error;
     return new Response(null, { status: 204, headers: { 'Cache-Control': 'no-store' } });

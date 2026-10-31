@@ -57,6 +57,7 @@ describe('POST /api/clic', () => {
     ['JSON roto', '{'],
     ['slug con ruta', { ...valido, slug: '../admin' }],
     ['slug que no está en el catálogo', { ...valido, slug: 'no-existe' }],
+    ['slug del prototipo de Object', { ...valido, slug: 'constructor' }],
     ['lugar fuera de la lista', { ...valido, lugar: 'popup' }],
     ['campo extra', { ...valido, ip: '1.2.3.4' }],
     ['sin lugar', { slug: 'modelo-a' }],
