@@ -24,6 +24,7 @@ const PAGES = [
   '/alertas/baja',
   '/alertas/confirmar',
   '/alertas/dar-de-baja',
+  '/guias/placa-scooter-electrico-cdmx-semovi',
 ];
 const WIDTHS = [375, 768, 1280];
 const SCHEMES = ['light', 'dark'] as const;
