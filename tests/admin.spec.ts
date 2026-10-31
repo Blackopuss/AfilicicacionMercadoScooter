@@ -9,5 +9,5 @@ test('/admin sin sesión no muestra datos', async ({ page }) => {
   await expect(page.locator('input[name="precio"]')).toHaveCount(0);
   await expect(page.locator('[data-slug], [data-ultimo]')).toHaveCount(0);
   await expect(page.getByRole('button', { name: /Guardar|Publicar/ })).toHaveCount(0);
-  await expect(page.getByText(/Segway|Xiaomi|NIU|\$\d/)).toHaveCount(0);
+  await expect(page.getByText(/Segway|iScooter|Honey Whale|\$\d/)).toHaveCount(0);
 });
