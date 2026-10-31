@@ -1,0 +1,19 @@
+---
+// Botón de las páginas a las que enlazan los correos. El token llega en el fragmento (#t=): nunca viaja al
+// servidor ni en el Referer. Solo el clic hace el POST, así los filtros de correo que abren links no tocan nada.
+interface Props {
+  accion: string;
+  boton: string;
+}
+const { accion, boton } = Astro.props;
+---
+
+<form method="post" action={accion} class="mt-8" data-token>
+  <input type="hidden" name="t" />
+  <button type="submit" class="btn btn-ink">{boton}</button>
+</form>
+
+<script>
+  const t = new URLSearchParams(location.hash.slice(1)).get('t') ?? '';
+  for (const i of document.querySelectorAll<HTMLInputElement>('form[data-token] input[name="t"]')) i.value = t;
+</script>

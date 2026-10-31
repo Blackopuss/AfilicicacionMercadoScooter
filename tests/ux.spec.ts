@@ -22,6 +22,8 @@ const PAGES = [
   '/guias/autonomia-real-vs-fabricante',
   '/alertas/confirmada',
   '/alertas/baja',
+  '/alertas/confirmar',
+  '/alertas/dar-de-baja',
 ];
 const WIDTHS = [375, 768, 1280];
 const SCHEMES = ['light', 'dark'] as const;
