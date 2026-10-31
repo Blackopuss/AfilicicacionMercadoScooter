@@ -1,0 +1,29 @@
+{
+  "marca": "iScooter",
+  "modelo": "i8",
+  "autonomiaFabricanteKm": 30,
+  "velocidadMaxKmh": 30,
+  "potenciaW": 500,
+  "potenciaPicoW": null,
+  "bateriaWh": 216,
+  "voltajeV": 36,
+  "pesoKg": 12,
+  "cargaMaxKg": 100,
+  "ruedaPulgadas": 8.5,
+  "tipoRueda": "neumatica",
+  "proteccionIP": "IP54",
+  "plegable": true,
+  "suspension": "ninguna",
+  "frenos": "Freno electrónico delantero y disco trasero",
+  "pendienteMaxPct": 15,
+  "tiempoCargaH": 6,
+  "categorias": [
+    "urbano",
+    "plegable"
+  ],
+  "fuenteSpecs": "https://iscooter.com.mx/products/i8-scooter-electrico-plegable-para-adultos-500w",
+  "linkAfiliado": "https://meli.la/1CXCdqG",
+  "tipoVendedor": "oficial",
+  "foto": null,
+  "activo": true
+}

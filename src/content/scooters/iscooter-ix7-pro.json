@@ -1,0 +1,29 @@
+{
+  "marca": "iScooter",
+  "modelo": "iX7 Pro",
+  "autonomiaFabricanteKm": 80,
+  "velocidadMaxKmh": 60,
+  "potenciaW": 2000,
+  "potenciaPicoW": 2000,
+  "bateriaWh": 840,
+  "voltajeV": 48,
+  "pesoKg": 30,
+  "cargaMaxKg": 150,
+  "ruedaPulgadas": 10,
+  "tipoRueda": "tubeless",
+  "proteccionIP": "IPX4",
+  "plegable": true,
+  "suspension": "doble",
+  "frenos": "Disco delantero y trasero + freno electrónico",
+  "pendienteMaxPct": 25,
+  "tiempoCargaH": 10,
+  "categorias": [
+    "todoterreno",
+    "larga-autonomia"
+  ],
+  "fuenteSpecs": "https://iscooter.com.mx/products/ix7-pro-patineta-electrica-todoterreno-de-2000w",
+  "linkAfiliado": "https://meli.la/1JeHF2h",
+  "tipoVendedor": "oficial",
+  "foto": null,
+  "activo": true
+}
