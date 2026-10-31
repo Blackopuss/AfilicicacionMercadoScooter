@@ -1,0 +1,28 @@
+{
+  "marca": "Honey Whale",
+  "modelo": "E9 Max-N",
+  "autonomiaFabricanteKm": 40,
+  "velocidadMaxKmh": 32,
+  "potenciaW": 500,
+  "potenciaPicoW": 650,
+  "bateriaWh": null,
+  "voltajeV": 36,
+  "pesoKg": 22,
+  "cargaMaxKg": 120,
+  "ruedaPulgadas": 10,
+  "tipoRueda": "neumatica",
+  "proteccionIP": "IPX4",
+  "plegable": true,
+  "suspension": "ninguna",
+  "frenos": "Tambor delantero y disco trasero",
+  "pendienteMaxPct": 27,
+  "tiempoCargaH": 8,
+  "categorias": [
+    "urbano"
+  ],
+  "fuenteSpecs": "https://honeywhale.com.mx/producto/scooter-electrico-honey-whale-e9-max-n/",
+  "linkAfiliado": "https://meli.la/1PJdyDP",
+  "tipoVendedor": "oficial",
+  "foto": null,
+  "activo": true
+}

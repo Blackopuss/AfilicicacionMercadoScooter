@@ -1,0 +1,29 @@
+{
+  "marca": "Honey Whale",
+  "modelo": "T8 Max",
+  "autonomiaFabricanteKm": 65,
+  "velocidadMaxKmh": 65,
+  "potenciaW": 1600,
+  "potenciaPicoW": 2000,
+  "bateriaWh": null,
+  "voltajeV": 52,
+  "pesoKg": 33,
+  "cargaMaxKg": 120,
+  "ruedaPulgadas": 12,
+  "tipoRueda": "tubeless",
+  "proteccionIP": "IPX4",
+  "plegable": true,
+  "suspension": "doble",
+  "frenos": "Disco hidráulico delantero y trasero",
+  "pendienteMaxPct": 27,
+  "tiempoCargaH": 10,
+  "categorias": [
+    "todoterreno",
+    "larga-autonomia"
+  ],
+  "fuenteSpecs": "https://honeywhale.com.mx/producto/scooter-electrico-honey-whale-t8-max/",
+  "linkAfiliado": "https://meli.la/26bgWnB",
+  "tipoVendedor": "oficial",
+  "foto": null,
+  "activo": true
+}

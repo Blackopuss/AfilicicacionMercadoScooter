@@ -1,0 +1,28 @@
+{
+  "marca": "Honey Whale",
+  "modelo": "M1 Max",
+  "autonomiaFabricanteKm": 22,
+  "velocidadMaxKmh": 32,
+  "potenciaW": 350,
+  "potenciaPicoW": 500,
+  "bateriaWh": null,
+  "voltajeV": 36,
+  "pesoKg": 17,
+  "cargaMaxKg": 120,
+  "ruedaPulgadas": 10,
+  "tipoRueda": "neumatica",
+  "proteccionIP": "IPX4",
+  "plegable": true,
+  "suspension": "doble",
+  "frenos": "Disco y freno electrónico",
+  "pendienteMaxPct": 27,
+  "tiempoCargaH": 7,
+  "categorias": [
+    "urbano"
+  ],
+  "fuenteSpecs": "https://honeywhale.com.mx/producto/scooter-electrico-honey-whale-m1-max-negro-rojo/",
+  "linkAfiliado": "https://meli.la/19BpEhk",
+  "tipoVendedor": "oficial",
+  "foto": null,
+  "activo": true
+}

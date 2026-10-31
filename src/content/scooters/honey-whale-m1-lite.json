@@ -1,0 +1,29 @@
+{
+  "marca": "Honey Whale",
+  "modelo": "M1 Lite",
+  "autonomiaFabricanteKm": 16,
+  "velocidadMaxKmh": 25,
+  "potenciaW": 500,
+  "potenciaPicoW": 500,
+  "bateriaWh": null,
+  "voltajeV": 36,
+  "pesoKg": 12.5,
+  "cargaMaxKg": 120,
+  "ruedaPulgadas": 8.5,
+  "tipoRueda": "solida",
+  "proteccionIP": "IPX4",
+  "plegable": true,
+  "suspension": "ninguna",
+  "frenos": "Freno electrónico",
+  "pendienteMaxPct": 27,
+  "tiempoCargaH": 7,
+  "categorias": [
+    "urbano",
+    "plegable"
+  ],
+  "fuenteSpecs": "https://honeywhale.com.mx/producto/scooter-electrico-honey-whale-m1-lite-azul/",
+  "linkAfiliado": "https://meli.la/2uqoFuP",
+  "tipoVendedor": "oficial",
+  "foto": null,
+  "activo": true
+}
