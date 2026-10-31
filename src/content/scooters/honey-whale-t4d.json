@@ -1,0 +1,29 @@
+{
+  "marca": "Honey Whale",
+  "modelo": "T4D",
+  "autonomiaFabricanteKm": 65,
+  "velocidadMaxKmh": 65,
+  "potenciaW": 1600,
+  "potenciaPicoW": 2600,
+  "bateriaWh": null,
+  "voltajeV": 52,
+  "pesoKg": 34,
+  "cargaMaxKg": 120,
+  "ruedaPulgadas": 11,
+  "tipoRueda": "tubeless",
+  "proteccionIP": "IPX4",
+  "plegable": true,
+  "suspension": "doble",
+  "frenos": "Disco",
+  "pendienteMaxPct": 27,
+  "tiempoCargaH": 11,
+  "categorias": [
+    "todoterreno",
+    "larga-autonomia"
+  ],
+  "fuenteSpecs": "https://honeywhale.com.mx/producto/scooter-electrico-honey-whale-t4d/",
+  "linkAfiliado": "https://meli.la/1uqwa2c",
+  "tipoVendedor": "oficial",
+  "foto": null,
+  "activo": true
+}
