@@ -31,6 +31,7 @@ Falta que el dueño abra el PR `desarrollo` → `main`.
    - Brevo + Turnstile: `docs/alertas.md`.
    - Mapbox: `docs/mapa.md`.
    - Dominio (Hostinger con nameservers en Cloudflare) y `SITE_URL`.
+   - Seguridad (revisión del 30/10/2026): la regla de rate limiting de `/api/*` (`docs/alertas.md`) solo se puede crear con dominio propio; `*.pages.dev` no admite reglas. Hasta tenerla, no cargar `MAPBOX_TOKEN` ni los secretos de Brevo/Turnstile en Pages: cualquiera podría gastar la cuota de Mapbox o de envíos llamando a la API sin navegador.
 
    Todas las variables están en `.env.example`.
 3. **Datos de los 16 modelos** (`src/content/scooters/*.json`): `linkAfiliado` (del panel de afiliados de Mercado Libre), `tipoVendedor` y `foto` (de prensa del fabricante o propia).
