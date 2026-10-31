@@ -60,6 +60,7 @@ const producto = {
   description={descripcion}
   migas={[{ nombre: 'Comparar', ruta: '/comparar' }, { nombre, ruta: `/scooter/${s.slug}` }]}
   jsonLd={[producto]}
+  imagen={s.foto ? { foto: s.foto, alt: `Scooter eléctrico ${nombre}` } : undefined}
 >
   <article class="container-page pt-10">
     <a href="/comparar" class="inline-flex min-h-11 items-center gap-2 font-semibold underline-offset-4 hover:underline">

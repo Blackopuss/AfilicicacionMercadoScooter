@@ -2,6 +2,8 @@
 import '@fontsource/archivo-black';
 import '@fontsource-variable/archivo';
 import '../styles/global.css';
+import type { ImageMetadata } from 'astro';
+import { getImage } from 'astro:assets';
 import Icon from '../components/Icon.astro';
 import AlertaPopup from '../components/AlertaPopup.astro';
 import { SITE, NAV } from '../config';
@@ -16,14 +18,21 @@ export interface Props {
   migas?: Miga[];
   /** Datos estructurados extra (schema.org), además del BreadcrumbList. */
   jsonLd?: Record<string, unknown>[];
+  /** Imagen de vista previa al compartir (og:image). Sin ella, /og.png. */
+  imagen?: { foto: ImageMetadata; alt: string };
 }
-const { title, description = SITE.description, noindex = false, migas, jsonLd = [] } = Astro.props;
+const { title, description = SITE.description, noindex = false, migas, jsonLd = [], imagen } = Astro.props;
 const pageTitle = title ? `${title} · ${SITE.name}` : `${SITE.name} · Compara scooters eléctricos en México`;
 const path = Astro.url.pathname;
 // Misma forma que las URLs del sitemap (build.format 'directory': con barra final).
 const absoluta = (ruta: string) => new URL(ruta.endsWith('/') ? ruta : `${ruta}/`, Astro.site).href;
 const canonical = absoluta(path);
-const ogImagen = new URL('/og.png', Astro.site).href;
+// JPEG porque WhatsApp y Facebook no siempre aceptan WebP. Proporción original: con fit="contain" el servicio
+// sharp no rellena hasta 1200×630 (reduce a 630×630) y "cover" recortaría el scooter.
+const foto = imagen && (await getImage({ src: imagen.foto, width: Math.min(1200, imagen.foto.width), format: 'jpeg', background: '#fff' }));
+const og = foto
+  ? { src: new URL(foto.src, Astro.site).href, width: foto.attributes.width, height: foto.attributes.height, alt: imagen!.alt }
+  : { src: new URL('/og.png', Astro.site).href, width: 1200, height: 630, alt: 'Compara scooters eléctricos en México: precio verificado y autonomía real' };
 
 const todasLasMigas = [{ nombre: 'Inicio', ruta: '/' }, ...(migas ?? (path === '/' ? [] : [{ nombre: title ?? SITE.name, ruta: path }]))];
 const datos = [
@@ -54,11 +63,12 @@ const ld = (d: Record<string, unknown>) => JSON.stringify(d).replace(/</g, '\u00
     <meta property="og:title" content={pageTitle} />
     <meta property="og:description" content={description} />
     <meta property="og:url" content={canonical} />
-    <meta property="og:image" content={ogImagen} />
-    <meta property="og:image:width" content="1200" />
-    <meta property="og:image:height" content="630" />
-    <meta property="og:image:alt" content="Compara scooters eléctricos en México: precio verificado y autonomía real" />
+    <meta property="og:image" content={og.src} />
+    <meta property="og:image:width" content={String(og.width)} />
+    <meta property="og:image:height" content={String(og.height)} />
+    <meta property="og:image:alt" content={og.alt} />
     <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:image" content={og.src} />
     {datos.map((d) => <script type="application/ld+json" set:html={ld(d)} />)}
     <meta name="theme-color" content="#111111" media="(prefers-color-scheme: dark)" />
     <meta name="theme-color" content="#f2efe9" media="(prefers-color-scheme: light)" />

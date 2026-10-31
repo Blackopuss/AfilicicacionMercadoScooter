@@ -42,6 +42,8 @@ const filas = ESPECIFICACIONES.map((e) => {
 });
 const victorias = [filas.filter((f) => f.celdas[0].gana).length, filas.filter((f) => f.celdas[1].gana).length];
 const titulo = `${na} vs ${nb}`;
+// Vista previa al compartir: la foto del primero del par, o la del segundo si aquel no tiene.
+const conFoto = a.foto ? a : b.foto ? b : null;
 const h2 = 'font-display text-[clamp(32px,5vw,56px)] leading-[0.9] tracking-[-0.03em] uppercase';
 ---
 
@@ -49,6 +51,7 @@ const h2 = 'font-display text-[clamp(32px,5vw,56px)] leading-[0.9] tracking-[-0.
   title={`${titulo}: cuál conviene`}
   description={`${na} contra ${nb}: ${a.puntuacion}/100 contra ${b.puntuacion}/100, ${ra} contra ${rb} km de autonomía real. Quién gana en cada especificación y a quién le conviene cada uno.`}
   migas={[{ nombre: 'Comparar', ruta: '/comparar' }, { nombre: titulo, ruta: rutaVs(a.slug, b.slug) }]}
+  imagen={conFoto?.foto ? { foto: conFoto.foto, alt: `Scooter eléctrico ${nombre(conFoto)}` } : undefined}
 >
   <article class="container-page pt-10">
     <a href="/comparar" class="inline-flex min-h-11 items-center gap-2 font-semibold underline-offset-4 hover:underline">
