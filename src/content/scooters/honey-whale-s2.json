@@ -1,0 +1,29 @@
+{
+  "marca": "Honey Whale",
+  "modelo": "S2",
+  "autonomiaFabricanteKm": 20,
+  "velocidadMaxKmh": 25,
+  "potenciaW": 350,
+  "potenciaPicoW": 500,
+  "bateriaWh": null,
+  "voltajeV": 36,
+  "pesoKg": 13,
+  "cargaMaxKg": 120,
+  "ruedaPulgadas": 8.5,
+  "tipoRueda": "neumatica",
+  "proteccionIP": "IPX4",
+  "plegable": true,
+  "suspension": "ninguna",
+  "frenos": "Disco trasero y freno electrónico",
+  "pendienteMaxPct": 18,
+  "tiempoCargaH": 6,
+  "categorias": [
+    "urbano",
+    "plegable"
+  ],
+  "fuenteSpecs": "https://honeywhale.com.mx/producto/scooter-electrico-honey-whale-s2-negro/",
+  "linkAfiliado": "https://meli.la/1nb7rH8",
+  "tipoVendedor": "oficial",
+  "foto": null,
+  "activo": true
+}
