@@ -126,7 +126,10 @@ const preguntas = [
       <p class="mt-3 text-lg text-muted" data-resumen></p>
       <ol class="mt-8 grid gap-5 lg:grid-cols-3" data-lista></ol>
       <div class="mt-8 flex flex-wrap gap-3">
-        <button type="button" class="btn btn-ink" data-compartir>Compartir</button>
+        <button type="button" class="btn btn-accent transition-colors disabled:cursor-not-allowed disabled:opacity-50" data-compartir-tarjeta disabled>
+          Preparando tarjeta…
+        </button>
+        <button type="button" class="btn btn-ink" data-compartir>Compartir enlace</button>
         <button type="button" class="btn btn-outline" data-reiniciar>Cambiar respuestas</button>
       </div>
       <p class="mt-4 text-sm text-muted">
@@ -152,8 +155,10 @@ const preguntas = [
 </Layout>
 
 <script>
+  import { SITE } from '../config';
   import { formatoPrecio } from '../lib/formato';
-  import { aParametros, completas, leerRespuestas, recomendar, type Candidato } from '../lib/recomendar';
+  import { aParametros, completas, leerRespuestas, recomendar, type Candidato, type Recomendacion } from '../lib/recomendar';
+  import { TARJETA, cortarLineas, tamanoQueCabe } from '../lib/tarjeta';
 
   type Modelo = Candidato & { verificadoEn: string | null };
 
@@ -212,13 +217,15 @@ const preguntas = [
     resultado.querySelector('[data-titulo]')!.textContent = alguno
       ? `Tus ${recs.length} scooters`
       : 'Ninguno cumple todo: estos son los más cercanos';
-    resultado.querySelector('[data-resumen]')!.textContent = [
+    const resumen = [
       `${resp.distanciaKm} km al día`,
       `${resp.pesoKg} kg`,
       resp.presupuestoMxn === null ? 'sin límite de presupuesto' : `hasta ${formatoPrecio(resp.presupuestoMxn)}`,
       resp.subidas ? 'con subidas' : 'casi plano',
       resp.portatil ? 'lo cargas' : 'casi siempre rueda',
     ].join(' · ');
+    resultado.querySelector('[data-resumen]')!.textContent = resumen;
+    prepararTarjeta(recs, resumen, alguno);
 
     const lista = resultado.querySelector('[data-lista]')!;
     lista.replaceChildren(
@@ -274,6 +281,186 @@ const preguntas = [
   atras.addEventListener('click', () => actual > 0 && irA(actual - 1));
   adelante.addEventListener('click', siguiente);
   resultado.querySelector('[data-reiniciar]')!.addEventListener('click', () => irA(0));
+
+  /** PNG para historias con los colores del tema actual. Sin precios (llevarían fecha) ni links de afiliado. */
+  async function crearTarjeta(recs: Recomendacion<Modelo>[], resumen: string, alguno: boolean): Promise<File> {
+    await document.fonts.ready;
+    await Promise.all(['80px "Archivo Black"', '700 40px "Archivo Variable"'].map((f) => document.fonts.load(f)));
+
+    const { ancho: W, alto: H } = TARJETA;
+    const P = 80; // margen
+    const A = W - 2 * P;
+    const canvas = document.createElement('canvas');
+    canvas.width = W;
+    canvas.height = H;
+    const ctx = canvas.getContext('2d')!;
+    const css = getComputedStyle(document.documentElement);
+    const color = (token: string) => css.getPropertyValue(`--${token}`).trim();
+    const display = (px: number) => {
+      ctx.font = `${px}px "Archivo Black"`;
+      ctx.letterSpacing = `${-0.03 * px}px`;
+    };
+    const sans = (px: number, peso = 700, tracking = 0) => {
+      ctx.font = `${peso} ${px}px "Archivo Variable"`;
+      ctx.letterSpacing = `${tracking * px}px`;
+    };
+    const medir = (s: string) => ctx.measureText(s).width;
+    const cabe = (s: string, ancho: number, maxPx: number) => tamanoQueCabe(s, ancho, (t, px) => (display(px), medir(t)), maxPx);
+
+    ctx.fillStyle = color('bg');
+    ctx.fillRect(0, 0, W, H);
+
+    // Cabecera: marca, etiqueta y línea de tinta. Arriba y abajo queda aire: ahí van los controles de las historias.
+    ctx.fillStyle = color('fg');
+    display(64);
+    ctx.fillText(SITE.name, P, 200);
+    sans(26, 700, 0.12);
+    ctx.textAlign = 'right';
+    ctx.fillText('QUIZ · 5 PREGUNTAS', W - P, 192);
+    ctx.textAlign = 'left';
+    ctx.fillRect(P, 234, A, 4);
+
+    // Titular: segunda línea en bloque naranja, como en la página. La altura de "H" fija la línea (los acentos no la empujan).
+    const [linea1, linea2] = alguno ? [`MIS ${recs.length}`, 'SCOOTERS'] : ['LOS MÁS', 'CERCANOS'];
+    const pad = 22;
+    display(cabe(linea1, A, 150));
+    let y = 300 + ctx.measureText('H').actualBoundingBoxAscent;
+    ctx.fillText(linea1, P, y);
+    display(cabe(linea2, A - 2 * pad, 150));
+    const m2 = ctx.measureText(linea2);
+    const alto2 = ctx.measureText('H').actualBoundingBoxAscent;
+    y += 24;
+    ctx.fillStyle = color('accent');
+    ctx.fillRect(P, y, m2.width + 2 * pad, alto2 + 2 * pad);
+    ctx.fillStyle = color('on-accent');
+    ctx.fillText(linea2, P + pad, y + pad + alto2);
+    y += alto2 + 2 * pad + 60;
+
+    ctx.fillStyle = color('muted');
+    sans(34, 500);
+    for (const linea of cortarLineas(resumen, A, medir, 2)) {
+      ctx.fillText(linea, P, y);
+      y += 46;
+    }
+
+    // Las recomendaciones: número en columna naranja, marca, modelo, puntos y autonomía real
+    const alto = 252;
+    const gap = 18;
+    const col = 160;
+    y += 4;
+    recs.forEach((r, i) => {
+      const top = y + i * (alto + gap);
+      const x = P + col + 36;
+      const w = W - P - 36 - x;
+      ctx.fillStyle = color('surface');
+      ctx.fillRect(P, top, A, alto);
+      ctx.fillStyle = color('accent');
+      ctx.fillRect(P, top, col, alto);
+      ctx.strokeStyle = color('border');
+      ctx.lineWidth = 4;
+      ctx.strokeRect(P + 2, top + 2, A - 4, alto - 4);
+      ctx.fillStyle = color('border');
+      ctx.fillRect(P + col, top, 4, alto);
+      ctx.fillStyle = color('on-accent');
+      display(88);
+      ctx.textAlign = 'center';
+      ctx.fillText(String(i + 1).padStart(2, '0'), P + col / 2, top + alto / 2 + 32);
+      ctx.textAlign = 'left';
+
+      sans(26, 700, 0.12);
+      let anchoMarca = w;
+      if (!r.cumple) {
+        const aviso = r.llega ? 'NO CUMPLE' : 'NO LLEGA';
+        const ancho = medir(aviso) + 32;
+        anchoMarca -= ancho + 16;
+        ctx.fillStyle = color('fg');
+        ctx.beginPath();
+        ctx.roundRect(W - P - 32 - ancho, top + 18, ancho, 44, 22);
+        ctx.fill();
+        ctx.fillStyle = color('bg');
+        ctx.fillText(aviso, W - P - 32 - ancho + 16, top + 50);
+      }
+      ctx.fillStyle = color('muted');
+      ctx.fillText(cortarLineas(r.scooter.marca.toUpperCase(), anchoMarca, medir, 1)[0] ?? '', x, top + 50);
+      ctx.fillStyle = color('fg');
+      sans(40, 800);
+      cortarLineas(r.scooter.modelo, w, medir, 2).forEach((linea, j) => ctx.fillText(linea, x, top + 96 + j * 44));
+
+      const base = top + alto - 26;
+      display(64);
+      const puntos = String(r.scooter.puntuacion);
+      ctx.fillText(puntos, x, base);
+      const xPuntos = x + medir(puntos) + 12;
+      ctx.fillStyle = color('muted');
+      sans(30, 600);
+      ctx.fillText('/100', xPuntos, base);
+      ctx.fillStyle = color('fg');
+      sans(30, 700, 0.04);
+      ctx.textAlign = 'right';
+      ctx.fillText(`${r.autonomiaKm} KM REALES`, W - P - 32, base);
+      ctx.textAlign = 'left';
+    });
+
+    // Pie: invitación y dirección del sitio (sin links de afiliado)
+    const pie = y + recs.length * (alto + gap) + 24;
+    ctx.fillStyle = color('fg');
+    ctx.fillRect(P, pie, A, 4);
+    ctx.fillStyle = color('muted');
+    sans(28, 700, 0.12);
+    ctx.fillText('¿Y TÚ? HAZ EL QUIZ EN', P, pie + 64);
+    ctx.fillStyle = color('fg');
+    const url = `${location.host}/quiz`;
+    display(cabe(url, A, 64));
+    ctx.fillText(url, P, pie + 136);
+
+    const blob = await new Promise<Blob | null>((listo) => canvas.toBlob(listo, 'image/png'));
+    if (!blob) throw new Error('El canvas no generó la imagen');
+    return new File([blob], `${SITE.name.toLowerCase()}-quiz.png`, { type: 'image/png' });
+  }
+
+  // La tarjeta se prepara al mostrar el resultado: share() pide el clic reciente y Safari lo pierde si antes hay awaits.
+  const botonTarjeta = resultado.querySelector<HTMLButtonElement>('[data-compartir-tarjeta]')!;
+  let archivo: File | null = null;
+  let version = 0;
+  const puedeCompartir = (f: File) => !!navigator.canShare?.({ files: [f] });
+
+  async function prepararTarjeta(recs: Recomendacion<Modelo>[], resumen: string, alguno: boolean) {
+    const v = ++version;
+    archivo = null;
+    botonTarjeta.disabled = true;
+    botonTarjeta.textContent = 'Preparando tarjeta…';
+    try {
+      const f = await crearTarjeta(recs, resumen, alguno);
+      if (v !== version) return; // cambiaron las respuestas mientras se dibujaba
+      archivo = f;
+      botonTarjeta.textContent = puedeCompartir(f) ? 'Compartir tarjeta' : 'Descargar tarjeta';
+      botonTarjeta.disabled = false;
+    } catch (e) {
+      console.error(e);
+      if (v === version) botonTarjeta.textContent = 'Tarjeta no disponible';
+    }
+  }
+
+  botonTarjeta.addEventListener('click', async () => {
+    if (!archivo) return;
+    if (puedeCompartir(archivo)) {
+      try {
+        await navigator.share({ files: [archivo], title: document.title });
+        estado.textContent = 'Tarjeta compartida';
+        return;
+      } catch (e) {
+        if ((e as Error).name === 'AbortError') return;
+        // Si el sistema no deja compartir el archivo, se descarga.
+      }
+    }
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(archivo);
+    a.download = archivo.name;
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(a.href), 10_000);
+    estado.textContent = 'Tarjeta descargada';
+    botonTarjeta.textContent = 'Tarjeta descargada';
+  });
 
   const compartir = resultado.querySelector<HTMLButtonElement>('[data-compartir]')!;
   if (!navigator.share) compartir.textContent = 'Copiar enlace';

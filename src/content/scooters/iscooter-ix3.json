@@ -1,0 +1,28 @@
+{
+  "marca": "iScooter",
+  "modelo": "iX3",
+  "autonomiaFabricanteKm": 45,
+  "velocidadMaxKmh": 40,
+  "potenciaW": 800,
+  "potenciaPicoW": 800,
+  "bateriaWh": 480,
+  "voltajeV": 48,
+  "pesoKg": 22,
+  "cargaMaxKg": 120,
+  "ruedaPulgadas": 10,
+  "tipoRueda": "tubeless",
+  "proteccionIP": "IPX4",
+  "plegable": true,
+  "suspension": "doble",
+  "frenos": "Disco mecánico delantero y trasero + freno electrónico",
+  "pendienteMaxPct": 25,
+  "tiempoCargaH": 7,
+  "categorias": [
+    "todoterreno"
+  ],
+  "fuenteSpecs": "https://iscooter.com.mx/products/ix3-patinete-electrico-todo-terreno-de",
+  "linkAfiliado": "https://meli.la/13zbrCG",
+  "tipoVendedor": "oficial",
+  "foto": null,
+  "activo": true
+}

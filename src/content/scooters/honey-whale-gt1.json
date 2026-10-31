@@ -1,0 +1,29 @@
+{
+  "marca": "Honey Whale",
+  "modelo": "GT1",
+  "autonomiaFabricanteKm": 100,
+  "velocidadMaxKmh": 100,
+  "potenciaW": 3000,
+  "potenciaPicoW": 4000,
+  "bateriaWh": 1764,
+  "voltajeV": 60,
+  "pesoKg": 41.55,
+  "cargaMaxKg": 150,
+  "ruedaPulgadas": 12,
+  "tipoRueda": "tubeless",
+  "proteccionIP": "IPX4",
+  "plegable": true,
+  "suspension": "doble",
+  "frenos": "Hidráulicos delantero y trasero",
+  "pendienteMaxPct": 47,
+  "tiempoCargaH": 8,
+  "categorias": [
+    "todoterreno",
+    "larga-autonomia"
+  ],
+  "fuenteSpecs": "https://honeywhale.com.mx/producto/scooter-electrico-honey-whale-gt1/",
+  "linkAfiliado": "https://meli.la/2qW9TAf",
+  "tipoVendedor": "oficial",
+  "foto": null,
+  "activo": true
+}

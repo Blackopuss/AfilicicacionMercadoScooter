@@ -88,3 +88,22 @@ test('no aparece en el aviso de privacidad ni en /admin', async ({ page }) => {
     await expect(page.locator('[data-alerta-popup]')).toHaveCount(0);
   }
 });
+
+test('los enlaces de los correos no hacen nada al abrirse: el token espera el clic en el botón', async ({ page }) => {
+  const t = 'A'.repeat(43);
+  for (const [path, accion, boton] of [
+    ['/alertas/confirmar/', '/api/alertas/confirmar', 'Confirmar alerta'],
+    ['/alertas/dar-de-baja/', '/api/alertas/baja', 'Darme de baja'],
+  ]) {
+    const api: string[] = [];
+    page.on('request', (r) => r.url().includes('/api/') && api.push(r.url()));
+    await page.goto(`${path}#t=${t}`);
+    await expect(page.getByRole('button', { name: boton })).toBeVisible();
+    const form = page.locator('form[data-token]');
+    await expect(form).toHaveAttribute('method', 'post');
+    await expect(form).toHaveAttribute('action', accion);
+    await expect(form.locator('input[name="t"]')).toHaveValue(t);
+    expect(api).toEqual([]);
+    page.removeAllListeners('request');
+  }
+});

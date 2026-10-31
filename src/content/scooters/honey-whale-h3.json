@@ -1,0 +1,29 @@
+{
+  "marca": "Honey Whale",
+  "modelo": "H3",
+  "autonomiaFabricanteKm": 60,
+  "velocidadMaxKmh": 55,
+  "potenciaW": 800,
+  "potenciaPicoW": 1000,
+  "bateriaWh": 720,
+  "voltajeV": 48,
+  "pesoKg": 35,
+  "cargaMaxKg": 120,
+  "ruedaPulgadas": 10,
+  "tipoRueda": "tubeless",
+  "proteccionIP": "IPX4",
+  "plegable": true,
+  "suspension": "doble",
+  "frenos": "Disco y freno electrónico",
+  "pendienteMaxPct": 27,
+  "tiempoCargaH": 7,
+  "categorias": [
+    "todoterreno",
+    "larga-autonomia"
+  ],
+  "fuenteSpecs": "https://honeywhale.com.mx/producto/scooter-electrico-honey-whale-h3-negro/",
+  "linkAfiliado": "https://meli.la/2MfKR9w",
+  "tipoVendedor": "oficial",
+  "foto": null,
+  "activo": true
+}

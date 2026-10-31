@@ -1,0 +1,29 @@
+{
+  "marca": "Honey Whale",
+  "modelo": "H2 Dual Ultra",
+  "autonomiaFabricanteKm": 65,
+  "velocidadMaxKmh": 55,
+  "potenciaW": 1600,
+  "potenciaPicoW": 2400,
+  "bateriaWh": 864,
+  "voltajeV": 48,
+  "pesoKg": 28.9,
+  "cargaMaxKg": 150,
+  "ruedaPulgadas": 10,
+  "tipoRueda": "tubeless",
+  "proteccionIP": "IPX4",
+  "plegable": true,
+  "suspension": "doble",
+  "frenos": "Disco y freno electrónico",
+  "pendienteMaxPct": 36,
+  "tiempoCargaH": 12,
+  "categorias": [
+    "urbano",
+    "larga-autonomia"
+  ],
+  "fuenteSpecs": "https://honeywhale.com.mx/producto/scooter-electrico-plegable-honey-whale-h2-dual-ultra/",
+  "linkAfiliado": "https://meli.la/1cBnxrN",
+  "tipoVendedor": "oficial",
+  "foto": null,
+  "activo": true
+}

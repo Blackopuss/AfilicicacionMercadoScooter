@@ -1,0 +1,28 @@
+{
+  "marca": "Honey Whale",
+  "modelo": "G3 Pro",
+  "autonomiaFabricanteKm": 56,
+  "velocidadMaxKmh": 60,
+  "potenciaW": 800,
+  "potenciaPicoW": 1640,
+  "bateriaWh": 864,
+  "voltajeV": 48,
+  "pesoKg": 31,
+  "cargaMaxKg": 150,
+  "ruedaPulgadas": 12,
+  "tipoRueda": "tubeless",
+  "proteccionIP": "IPX4",
+  "plegable": true,
+  "suspension": "trasera",
+  "frenos": "Disco delantero y trasero",
+  "pendienteMaxPct": 40,
+  "tiempoCargaH": 6,
+  "categorias": [
+    "todoterreno"
+  ],
+  "fuenteSpecs": "https://honeywhale.com.mx/producto/scooter-electrico-honey-whale-g3-pro-blanco-negro/",
+  "linkAfiliado": "https://meli.la/1HYrTFA",
+  "tipoVendedor": "oficial",
+  "foto": null,
+  "activo": true
+}

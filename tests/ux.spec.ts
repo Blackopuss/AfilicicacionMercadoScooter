@@ -14,14 +14,16 @@ const PAGES = [
   '/mapa',
   '/comparar',
   '/como-puntuamos',
-  '/scooter/xiaomi-electric-scooter-5',
-  '/scooter/segway-ninebot-max-g2',
-  '/comparar/segway-ninebot-max-g2-vs-xiaomi-electric-scooter-5',
+  '/scooter/segway-e3-pro',
+  '/scooter/segway-max-g3',
+  '/comparar/segway-e3-pro-vs-segway-max-g3',
   '/mejores/para-mas-de-100-kg',
   '/guias',
   '/guias/autonomia-real-vs-fabricante',
   '/alertas/confirmada',
   '/alertas/baja',
+  '/alertas/confirmar',
+  '/alertas/dar-de-baja',
 ];
 const WIDTHS = [375, 768, 1280];
 const SCHEMES = ['light', 'dark'] as const;

@@ -1,0 +1,29 @@
+{
+  "marca": "Segway",
+  "modelo": "E3 Pro",
+  "autonomiaFabricanteKm": 55,
+  "velocidadMaxKmh": 32,
+  "potenciaW": 400,
+  "potenciaPicoW": 800,
+  "bateriaWh": 368,
+  "voltajeV": 36,
+  "pesoKg": 18.2,
+  "cargaMaxKg": 120,
+  "ruedaPulgadas": 10,
+  "tipoRueda": "tubeless",
+  "proteccionIP": "IPX5",
+  "plegable": true,
+  "suspension": "doble",
+  "frenos": "Tambor delantero y electrónico trasero",
+  "pendienteMaxPct": 18,
+  "tiempoCargaH": 7,
+  "categorias": [
+    "urbano",
+    "plegable"
+  ],
+  "fuenteSpecs": "https://store-mx.segway.com/e3-pro-electric-scooter",
+  "linkAfiliado": "https://meli.la/1FZMRFY",
+  "tipoVendedor": "oficial",
+  "foto": null,
+  "activo": true
+}

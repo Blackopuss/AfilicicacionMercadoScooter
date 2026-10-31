@@ -1,0 +1,29 @@
+{
+  "marca": "Honey Whale",
+  "modelo": "E9 Pro",
+  "autonomiaFabricanteKm": 22,
+  "velocidadMaxKmh": 32,
+  "potenciaW": 350,
+  "potenciaPicoW": 500,
+  "bateriaWh": 280.8,
+  "voltajeV": 36,
+  "pesoKg": 13,
+  "cargaMaxKg": 120,
+  "ruedaPulgadas": 8.5,
+  "tipoRueda": "neumatica",
+  "proteccionIP": "IPX4",
+  "plegable": true,
+  "suspension": "ninguna",
+  "frenos": "Disco trasero y freno electrónico",
+  "pendienteMaxPct": 18,
+  "tiempoCargaH": 7,
+  "categorias": [
+    "urbano",
+    "plegable"
+  ],
+  "fuenteSpecs": "https://honeywhale.com.mx/producto/e9-pro-scooter-electrico/",
+  "linkAfiliado": "https://meli.la/2Ret5nu",
+  "tipoVendedor": "oficial",
+  "foto": null,
+  "activo": true
+}

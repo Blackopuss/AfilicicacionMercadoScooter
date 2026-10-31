@@ -28,25 +28,26 @@ export function precioParaAvisar(a: Alerta, actual?: PrecioCapturado, anterior?:
 const escapar = (s: string) =>
   s.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]!);
 
+// El token va en el fragmento: no llega al servidor al abrir el link; la página lo manda por POST con un clic.
 type Enlaces = { origen: string; slug: string; token: string };
 const fichaUrl = ({ origen, slug }: Enlaces) => `${origen}/scooter/${encodeURIComponent(slug)}`;
-const bajaUrl = ({ origen, token }: Enlaces) => `${origen}/api/alertas/baja?t=${encodeURIComponent(token)}`;
+const bajaUrl = ({ origen, token }: Enlaces) => `${origen}/alertas/dar-de-baja/#t=${encodeURIComponent(token)}`;
 
 function armar(para: string, asunto: string, parrafos: string[], boton: { texto: string; url: string }, baja: string): Email {
-  const texto = [...parrafos, `${boton.texto}: ${boton.url}`, '', `Darte de baja en un clic: ${baja}`, '', SITE.name].join('\n\n');
+  const texto = [...parrafos, `${boton.texto}: ${boton.url}`, '', `Darte de baja: ${baja}`, '', SITE.name].join('\n\n');
   const html = `<!doctype html><html lang="es-MX"><body style="font-family:Arial,sans-serif;color:#111;background:#f2efe9;padding:24px">
 <div style="max-width:560px;margin:0 auto;background:#fff;border:2px solid #111;padding:24px">
 <p style="font-weight:bold;letter-spacing:.1em;text-transform:uppercase;font-size:12px">${escapar(SITE.name)}</p>
 ${parrafos.map((p) => `<p style="font-size:16px;line-height:1.5">${escapar(p)}</p>`).join('\n')}
 <p><a href="${escapar(boton.url)}" style="display:inline-block;background:#111;color:#f2efe9;padding:14px 24px;font-weight:bold;text-decoration:none;text-transform:uppercase">${escapar(boton.texto)}</a></p>
-<p style="font-size:13px;color:#4a463f">¿Ya no quieres estos correos? <a href="${escapar(baja)}" style="color:#111">Darte de baja en un clic</a>.</p>
+<p style="font-size:13px;color:#4a463f">¿Ya no quieres estos correos? <a href="${escapar(baja)}" style="color:#111">Darte de baja</a>.</p>
 </div></body></html>`;
   return { para, asunto, texto, html };
 }
 
 /** Email de doble opt-in. El enlace de confirmar lleva el mismo token que el de baja. */
 export function emailConfirmacion(para: string, nombre: string, objetivo: number | null, e: Enlaces): Email {
-  const confirmar = `${e.origen}/api/alertas/confirmar?t=${encodeURIComponent(e.token)}`;
+  const confirmar = `${e.origen}/alertas/confirmar/#t=${encodeURIComponent(e.token)}`;
   const cuando = objetivo != null ? `cuando baje a ${formatoPrecio(objetivo)} o menos` : 'cada vez que baje de precio';
   return armar(
     para,

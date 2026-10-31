@@ -1,0 +1,15 @@
+---
+// Enlace del correo de confirmación (/alertas/confirmar/#t=). Abrirla no confirma nada: el botón hace POST a
+// /api/alertas/confirmar, que lleva a /alertas/confirmada. Verbo (acción pendiente) frente al participio (resultado).
+import Layout from '../../layouts/Layout.astro';
+import AlertaToken from '../../components/AlertaToken.astro';
+---
+
+<Layout title="Confirma tu alerta" noindex>
+  <section class="container-page pt-12 md:pt-16">
+    <p class="label">Alertas de precio</p>
+    <h1 class="slam mt-4 font-display text-[clamp(40px,9vw,104px)] leading-[0.9] tracking-[-0.04em] text-balance uppercase">Confirma tu alerta</h1>
+    <p class="mt-6 max-w-[60ch] text-lg">Un clic más: confirma que quieres que te avisemos cuando baje el precio. Si no la pediste tú, cierra esta página.</p>
+    <AlertaToken accion="/api/alertas/confirmar" boton="Confirmar alerta" />
+  </section>
+</Layout>

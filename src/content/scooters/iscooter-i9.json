@@ -1,0 +1,29 @@
+{
+  "marca": "iScooter",
+  "modelo": "i9",
+  "autonomiaFabricanteKm": 28,
+  "velocidadMaxKmh": 25,
+  "potenciaW": 350,
+  "potenciaPicoW": null,
+  "bateriaWh": 270,
+  "voltajeV": 36,
+  "pesoKg": 12,
+  "cargaMaxKg": 120,
+  "ruedaPulgadas": 8.5,
+  "tipoRueda": "solida",
+  "proteccionIP": "IP54",
+  "plegable": true,
+  "suspension": "ninguna",
+  "frenos": "EBAS delantero y disco trasero",
+  "pendienteMaxPct": 15,
+  "tiempoCargaH": 6,
+  "categorias": [
+    "urbano",
+    "plegable"
+  ],
+  "fuenteSpecs": "https://iscooter.com.mx/products/scooter-electrico-patin-i9-250w-25km-h-36v-con-app-iscooter",
+  "linkAfiliado": "https://meli.la/1HTKxBH",
+  "tipoVendedor": "oficial",
+  "foto": null,
+  "activo": true
+}

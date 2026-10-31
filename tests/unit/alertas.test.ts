@@ -100,7 +100,7 @@ async function post(body: unknown, headers: Record<string, string> = {}, method 
   return r;
 }
 
-const tokenDe = (texto: string, ruta: string) => texto.match(new RegExp(`${ruta}\\?t=([\\w-]+)`))![1];
+const tokenDe = (texto: string, ruta: string) => texto.match(new RegExp(`${ruta}#t=([\\w-]+)`))![1];
 
 describe('POST /api/alertas', () => {
   it('método distinto de POST → 405', async () => {
@@ -157,7 +157,7 @@ describe('POST /api/alertas', () => {
     expect(fila).toMatchObject({ email: 'ana@ejemplo.mx', scooter_slug: 'modelo-a', precio_objetivo: 9000, confirmado: false });
     expect(enviados).toHaveLength(1);
     expect(enviados[0].to).toEqual([{ email: 'ana@ejemplo.mx' }]);
-    const token = tokenDe(enviados[0].textContent, '/api/alertas/confirmar');
+    const token = tokenDe(enviados[0].textContent, '/alertas/confirmar/');
     expect(token).toHaveLength(43);
     expect(fila.token_hash).toBe(sha(token));
     expect(JSON.stringify(estado.tablas)).not.toContain(token); // el token nunca se guarda en claro
@@ -193,33 +193,77 @@ describe('POST /api/alertas', () => {
 });
 
 describe('confirmar y baja', () => {
+  const A = 'A'.repeat(43);
   beforeEach(() => {
     estado.tablas.alertas = [
-      { id: 1, email: 'a@a.mx', scooter_slug: 'modelo-a', confirmado: false, token_hash: sha('A'.repeat(43)) },
+      { id: 1, email: 'a@a.mx', scooter_slug: 'modelo-a', confirmado: false, token_hash: sha(A) },
       { id: 2, email: 'b@b.mx', scooter_slug: 'modelo-a', confirmado: false, token_hash: sha('B'.repeat(43)) },
     ];
   });
-  const get = (fn: typeof confirmar, ruta: string, t: string, method = 'GET') =>
-    fn({ request: new Request(`${ORIGEN}/api/alertas/${ruta}?t=${t}`, { method }), env: ENV });
+  const endpoints = [
+    { ruta: 'confirmar', fn: confirmar, pagina: '/alertas/confirmar/', fin: '/alertas/confirmada' },
+    { ruta: 'baja', fn: baja, pagina: '/alertas/dar-de-baja/', fin: '/alertas/baja' },
+  ];
+  type Op = { method?: string; query?: string; body?: string; headers?: Record<string, string> };
+  const llamar = (fn: typeof confirmar, ruta: string, { method = 'POST', query = '', body = `t=${A}`, headers = { Origin: ORIGEN } }: Op = {}) =>
+    fn({
+      request: new Request(`${ORIGEN}/api/alertas/${ruta}${query}`, {
+        method,
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded', ...headers },
+        body: method === 'GET' || method === 'HEAD' ? undefined : body,
+      }),
+      env: ENV,
+    });
+  const tabla = () => JSON.stringify(estado.tablas.alertas);
 
-  it('método distinto de GET → 405', async () => {
-    expect((await get(confirmar, 'confirmar', 'A'.repeat(43), 'POST')).status).toBe(405);
-    expect((await get(baja, 'baja', 'A'.repeat(43), 'DELETE')).status).toBe(405);
+  it.each(endpoints)('$ruta: GET no toca nada y lleva a la página del botón con el token en el fragmento', async ({ fn, ruta, pagina }) => {
+    const antes = tabla();
+    const r = await llamar(fn, ruta, { method: 'GET', query: `?t=${A}` });
+    expect([r.status, r.headers.get('Location')]).toEqual([303, `${pagina}#t=${A}`]);
+    const malo = await llamar(fn, ruta, { method: 'GET', query: '?t=%3Cscript%3E' });
+    expect(malo.headers.get('Location')).toBe(pagina); // lo que no es un token no se refleja
+    expect(tabla()).toBe(antes);
   });
 
-  it.each(['C'.repeat(43), 'corto', sha('A'.repeat(43)), ''])('token falso o mal formado (%s) no hace nada y responde igual', async (t) => {
-    const antes = JSON.stringify(estado.tablas.alertas);
-    const c = await get(confirmar, 'confirmar', t);
-    const b = await get(baja, 'baja', t);
-    expect(JSON.stringify(estado.tablas.alertas)).toBe(antes);
+  it.each(endpoints)('$ruta: otro método → 405', async ({ fn, ruta }) => {
+    for (const method of ['PUT', 'DELETE', 'HEAD']) {
+      const r = await llamar(fn, ruta, { method });
+      expect([r.status, r.headers.get('Allow')]).toEqual([405, 'GET, POST']);
+    }
+  });
+
+  it.each(endpoints)('$ruta: POST de otro origen o sin Origin → 403 y no toca nada', async ({ fn, ruta }) => {
+    const antes = tabla();
+    expect((await llamar(fn, ruta, { headers: { Origin: 'https://malo.test' } })).status).toBe(403);
+    expect((await llamar(fn, ruta, { headers: { Origin: 'null' } })).status).toBe(403);
+    expect((await llamar(fn, ruta, { headers: {} })).status).toBe(403);
+    expect(tabla()).toBe(antes);
+  });
+
+  it.each(endpoints)('$ruta: body enorme → 413 y no toca nada', async ({ fn, ruta }) => {
+    const antes = tabla();
+    expect((await llamar(fn, ruta, { body: `t=${A}&x=${'x'.repeat(5_000)}` })).status).toBe(413);
+    expect(tabla()).toBe(antes);
+  });
+
+  it.each([`t=${'C'.repeat(43)}`, 't=corto', `t=${sha(A)}`, 't=', '', `t=${A}&extra=1`, `t=${A}&t=${A}`])(
+    'token falso, mal formado o con campos de más (%s) no hace nada y responde igual',
+    async (body) => {
+      const antes = tabla();
+      for (const { fn, ruta, fin } of endpoints) {
+        const r = await llamar(fn, ruta, { body });
+        expect([r.status, r.headers.get('Location')]).toEqual([303, fin]);
+      }
+      expect(tabla()).toBe(antes);
+    },
+  );
+
+  it('el POST con el token de un suscriptor solo toca su fila', async () => {
+    const c = await llamar(confirmar, 'confirmar');
     expect([c.status, c.headers.get('Location')]).toEqual([303, '/alertas/confirmada']);
-    expect([b.status, b.headers.get('Location')]).toEqual([303, '/alertas/baja']);
-  });
-
-  it('el token de un suscriptor solo toca su fila', async () => {
-    await get(confirmar, 'confirmar', 'A'.repeat(43));
     expect(estado.tablas.alertas.map((a) => a.confirmado)).toEqual([true, false]);
-    await get(baja, 'baja', 'A'.repeat(43));
+    const b = await llamar(baja, 'baja');
+    expect([b.status, b.headers.get('Location')]).toEqual([303, '/alertas/baja']);
     expect(estado.tablas.alertas.map((a) => a.id)).toEqual([2]);
   });
 });
@@ -261,7 +305,7 @@ describe('enviarAvisos (tras publicar)', () => {
     expect(enviados.map((m) => m.to[0].email)).toEqual(['1@x.mx', '2@x.mx']);
     for (const m of enviados) {
       expect(m.textContent).toContain(`${ORIGEN}/scooter/modelo-a`);
-      const token = tokenDe(m.textContent, '/api/alertas/baja');
+      const token = tokenDe(m.textContent, '/alertas/dar-de-baja/');
       expect(estado.tablas.alertas.find((a) => a.email === m.to[0].email)!.token_hash).toBe(sha(token));
     }
     expect(estado.tablas.alertas.map((a) => a.ultimo_aviso_mxn)).toEqual([8500, 8500, null, 8500, null]);
@@ -296,7 +340,7 @@ describe('emails', () => {
       const urls = [...`${e.texto} ${e.html}`.matchAll(/https?:\/\/[^\s"<]+/g)].map((m) => m[0]);
       expect(urls.length).toBeGreaterThan(0);
       expect(urls.every((u) => u.startsWith(`${ORIGEN}/`))).toBe(true);
-      expect(e.texto).toContain(`${ORIGEN}/api/alertas/baja?t=`);
+      expect(e.texto).toContain(`${ORIGEN}/alertas/dar-de-baja/#t=`);
     }
   });
 

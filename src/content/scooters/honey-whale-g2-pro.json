@@ -1,0 +1,28 @@
+{
+  "marca": "Honey Whale",
+  "modelo": "G2 Pro",
+  "autonomiaFabricanteKm": 50,
+  "velocidadMaxKmh": 50,
+  "potenciaW": 800,
+  "potenciaPicoW": 1200,
+  "bateriaWh": 768,
+  "voltajeV": 48,
+  "pesoKg": 24.5,
+  "cargaMaxKg": 120,
+  "ruedaPulgadas": 10,
+  "tipoRueda": "tubeless",
+  "proteccionIP": "IPX4",
+  "plegable": true,
+  "suspension": "trasera",
+  "frenos": "Disco delantero y trasero",
+  "pendienteMaxPct": 21,
+  "tiempoCargaH": 8,
+  "categorias": [
+    "urbano"
+  ],
+  "fuenteSpecs": "https://honeywhale.com.mx/producto/scooter-electrico-honey-whale-g2-pro/",
+  "linkAfiliado": "https://meli.la/28Kybrc",
+  "tipoVendedor": "oficial",
+  "foto": null,
+  "activo": true
+}

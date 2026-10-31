@@ -1,0 +1,15 @@
+---
+// Enlace de baja de los correos (/alertas/dar-de-baja/#t=). Abrirla no borra nada: el botón hace POST a
+// /api/alertas/baja, que lleva a /alertas/baja (el resultado; esta ruta es la acción pendiente).
+import Layout from '../../layouts/Layout.astro';
+import AlertaToken from '../../components/AlertaToken.astro';
+---
+
+<Layout title="Darte de baja" noindex>
+  <section class="container-page pt-12 md:pt-16">
+    <p class="label">Alertas de precio</p>
+    <h1 class="slam mt-4 font-display text-[clamp(40px,9vw,104px)] leading-[0.9] tracking-[-0.04em] text-balance uppercase">Darte de baja</h1>
+    <p class="mt-6 max-w-[60ch] text-lg">Borraremos esta alerta y no te escribiremos más sobre ese modelo.</p>
+    <AlertaToken accion="/api/alertas/baja" boton="Darme de baja" />
+  </section>
+</Layout>

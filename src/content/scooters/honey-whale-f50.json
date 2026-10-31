@@ -1,0 +1,28 @@
+{
+  "marca": "Honey Whale",
+  "modelo": "F50",
+  "autonomiaFabricanteKm": 50,
+  "velocidadMaxKmh": 45,
+  "potenciaW": 500,
+  "potenciaPicoW": 800,
+  "bateriaWh": 720,
+  "voltajeV": 48,
+  "pesoKg": 25.5,
+  "cargaMaxKg": 120,
+  "ruedaPulgadas": 10,
+  "tipoRueda": "tubeless",
+  "proteccionIP": null,
+  "plegable": true,
+  "suspension": "doble",
+  "frenos": "Disco delantero y trasero",
+  "pendienteMaxPct": 27,
+  "tiempoCargaH": 8,
+  "categorias": [
+    "urbano"
+  ],
+  "fuenteSpecs": "https://honeywhale.com.mx/producto/scooter-electrico-honey-whale-f50/",
+  "linkAfiliado": "https://meli.la/2Ktt3Fw",
+  "tipoVendedor": "oficial",
+  "foto": null,
+  "activo": true
+}

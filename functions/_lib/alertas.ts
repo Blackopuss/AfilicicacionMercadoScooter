@@ -121,21 +121,41 @@ export async function enviarAvisos(supabase: SupabaseClient, env: EnvAlertas, or
   return avisos.length;
 }
 
-/** confirmar y baja: busca por hash del token y siempre responde igual (303 a una página genérica). */
+const MAX_BODY_TOKEN = 1_000; // "t=" + 43 caracteres; el resto sobra
+
+const redirigir = (Location: string) =>
+  new Response(null, { status: 303, headers: { Location, 'Cache-Control': 'no-store', 'Referrer-Policy': 'no-referrer' } });
+
+/**
+ * confirmar y baja. GET no toca nada (los filtros de correo abren los links solos): lleva a la página del botón
+ * conservando el token en el fragmento, para los correos ya enviados. POST (el botón): busca por hash del token y
+ * siempre responde igual (303 a una página genérica) sea válido o no.
+ */
 export async function porToken(
   request: Request,
   env: EnvAlertas,
   accion: (supabase: SupabaseClient, hash: string) => PromiseLike<{ error: unknown }>,
+  pagina: string,
   destino: string,
 ): Promise<Response> {
-  if (request.method !== 'GET') return json(405, { error: 'Método no permitido' }, { Allow: 'GET' });
-  const t = new URL(request.url).searchParams.get('t');
+  const url = new URL(request.url);
+  if (request.method === 'GET') {
+    const t = url.searchParams.get('t');
+    return redirigir(t && TOKEN.test(t) ? `${pagina}#t=${t}` : pagina);
+  }
+  if (request.method !== 'POST') return json(405, { error: 'Método no permitido' }, { Allow: 'GET, POST' });
+  if (request.headers.get('Origin') !== url.origin) return json(403, { error: 'Origen no permitido' });
+  if (Number(request.headers.get('Content-Length') ?? 0) > MAX_BODY_TOKEN) return json(413, { error: 'Demasiado grande' });
+  const texto = await request.text();
+  if (texto.length > MAX_BODY_TOKEN) return json(413, { error: 'Demasiado grande' });
+
+  const campos = new URLSearchParams(texto);
+  const t = [...campos.keys()].join() === 't' ? campos.get('t') : null; // sin campos extra
   const supabase = supabaseAdmin(env);
   if (!supabase) console.error('[alertas] Faltan PUBLIC_SUPABASE_URL o SUPABASE_SERVICE_ROLE_KEY');
   else if (t && TOKEN.test(t)) {
     const { error } = await accion(supabase, await sha256Hex(t));
     if (error) console.error('[alertas]', sinDatos(error));
   }
-  // no-referrer: el token de la URL no viaja a la página siguiente.
-  return new Response(null, { status: 303, headers: { Location: destino, 'Cache-Control': 'no-store', 'Referrer-Policy': 'no-referrer' } });
+  return redirigir(destino);
 }

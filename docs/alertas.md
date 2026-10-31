@@ -11,8 +11,9 @@ objetivo, si bajó). Los correos enlazan **solo a la web** (la ficha del modelo 
 | `src/components/AlertaForm.astro` | Formulario: correo, modelo, precio objetivo opcional, consentimiento obligatorio y Turnstile (se carga solo cuando el formulario se ve). En la ficha: `<AlertaForm id="alerta-ficha" slug={s.slug} />` (sección `#alerta`) |
 | `src/components/AlertaPopup.astro` | Popup de salida en `Layout.astro`: exit-intent en escritorio; en móvil, 60 % de scroll o 45 s. Máximo una vez cada 7 días (`localStorage`). No sale en `/admin`, `/aviso-de-privacidad` ni `/alertas/*` |
 | `POST /api/alertas` | Valida (zod), verifica Turnstile, guarda con `confirmado = false` y el SHA-256 de un token aleatorio de 32 bytes, envía la confirmación. Misma respuesta (202) exista o no el correo |
-| `GET /api/alertas/confirmar?t=` | Confirma la alerta de ese token. Siempre redirige a `/alertas/confirmada` |
-| `GET /api/alertas/baja?t=` | Borra la alerta de ese token. Siempre redirige a `/alertas/baja` |
+| `/alertas/confirmar/#t=`, `/alertas/dar-de-baja/#t=` | Páginas a las que enlazan los correos (`noindex`). Abrirlas no cambia nada: un botón (`AlertaToken.astro`) manda el token por POST |
+| `POST /api/alertas/confirmar` | Body `t=<token>`. Confirma la alerta de ese token. Siempre redirige a `/alertas/confirmada` |
+| `POST /api/alertas/baja` | Body `t=<token>`. Borra la alerta de ese token. Siempre redirige a `/alertas/baja` |
 | `POST /api/publicar` | Tras el deploy hook llama a `enviarAvisos` (`functions/_lib/alertas.ts`) |
 | `/modelos.json` | slug → nombre, generado en el build. Las funciones lo leen (binding `ASSETS`) para no confiar en el nombre que mande el cliente |
 | `supabase/migrations/0002_alertas_avisos.sql` | Objetivo opcional, `ultimo_aviso_mxn`, vista `precios_ultimos_dos` y función `registrar_avisos` (solo `service_role`) |
@@ -20,6 +21,28 @@ objetivo, si bajó). Los correos enlazan **solo a la web** (la ficha del modelo 
 Reglas de aviso (`precioParaAvisar` en `src/lib/alertas.ts`): solo alertas confirmadas y modelos disponibles;
 con objetivo, precio ≤ objetivo; sin objetivo, precio menor que la captura anterior; nunca dos avisos por el
 mismo precio. Primero se registra y luego se envía: si Brevo falla se pierde ese aviso, pero nunca se repite.
+
+### Confirmar y darse de baja: siempre con un clic (POST)
+
+Los filtros de enlaces de algunos correos corporativos abren los links solos. Por eso un GET nunca modifica nada:
+
+- Los correos enlazan a `/alertas/confirmar/#t=` y `/alertas/dar-de-baja/#t=`. Son rutas nuevas porque
+  `/alertas/confirmada` y `/alertas/baja` ya son las páginas de resultado (y los enlaces viejos y marcadores
+  apuntan ahí): el verbo es la acción pendiente, el participio o sustantivo, el resultado.
+- El token va en el **fragmento** (`#t=`): el navegador no lo manda al servidor al abrir el enlace, ni queda en
+  los logs, ni viaja en el `Referer`. El script de la página lo copia a un campo oculto del formulario.
+- El botón hace `POST` al endpoint (mismo origen; el CSP ya tiene `form-action 'self'`). El endpoint sigue
+  `docs/seguridad.md` §3: método (405), `Origin` igual al del sitio (403), body de 1 KB como mucho (413), solo
+  el campo `t` con la regex `TOKEN` y, válido o no, el mismo 303 a la página genérica.
+- `GET /api/alertas/confirmar?t=` y `GET /api/alertas/baja?t=` (correos ya enviados) solo redirigen a la página
+  del botón con el token en el fragmento.
+- Esas dos páginas llevan `Referrer-Policy: same-origin` (`public/_headers`) y no cargan nada externo. No
+  `no-referrer`: con esa política el navegador manda el POST del formulario con `Origin: null` y el endpoint lo
+  rechazaría. Como el token va en el fragmento, nunca está en el `Referer` de todas formas.
+
+Sin `List-Unsubscribe` / `List-Unsubscribe-Post` (RFC 8058) por ahora: solo lo exigen Gmail y Yahoo a quien
+envía más de 5000 correos al día, abriría un POST sin `Origin` (el cliente de correo no lo manda) y cada correo
+necesita su propio token en esa cabecera. Ver "Pendiente".
 
 El token rota en cada aviso (solo guardamos su hash, así que cada correo nuevo necesita uno nuevo): el enlace de
 baja que vale es el del último correo. El de la confirmación también sirve para darse de baja.
@@ -60,6 +83,8 @@ Nada más. Los dos scripts nuevos inline (formulario y popup) llevan su hash, qu
 
 ## Pendiente
 
-- Los filtros de enlaces de algunos correos corporativos abren los links solos: pueden confirmar (o dar de baja)
-  sin que la persona haga clic. Si se nota, cambiar `confirmar` y `baja` a una página con un botón que haga POST.
+- Baja en un clic desde el cliente de correo (`List-Unsubscribe` + `List-Unsubscribe-Post`, RFC 8058) si el
+  volumen se acerca a 5000 correos al día. Esos POST llegan sin `Origin`: aceptarlos solo en `baja`, con el token
+  en la URL de la cabecera y el body exacto `List-Unsubscribe=One-Click`. Confirmar antes que Brevo admita
+  cabeceras distintas por destinatario en `messageVersions`.
 - El aviso puede llegar unos minutos antes de que la web reconstruida muestre el precio nuevo.

@@ -1,0 +1,29 @@
+{
+  "marca": "Honey Whale",
+  "modelo": "H4",
+  "autonomiaFabricanteKm": 75,
+  "velocidadMaxKmh": 70,
+  "potenciaW": 1800,
+  "potenciaPicoW": 2400,
+  "bateriaWh": 1248,
+  "voltajeV": 60,
+  "pesoKg": 40,
+  "cargaMaxKg": 120,
+  "ruedaPulgadas": 11,
+  "tipoRueda": "tubeless",
+  "proteccionIP": "IPX4",
+  "plegable": true,
+  "suspension": "doble",
+  "frenos": "Disco y freno electrónico",
+  "pendienteMaxPct": 27,
+  "tiempoCargaH": 12,
+  "categorias": [
+    "urbano",
+    "larga-autonomia"
+  ],
+  "fuenteSpecs": "https://honeywhale.com.mx/producto/scooter-electrico-honey-whale-h4-azul/",
+  "linkAfiliado": "https://meli.la/2w7gxoS",
+  "tipoVendedor": "oficial",
+  "foto": null,
+  "activo": true
+}
