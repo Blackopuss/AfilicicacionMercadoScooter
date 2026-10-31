@@ -1,0 +1,29 @@
+{
+  "marca": "Segway",
+  "modelo": "E2 Plus II",
+  "autonomiaFabricanteKm": 25,
+  "velocidadMaxKmh": 25,
+  "potenciaW": 300,
+  "potenciaPicoW": 500,
+  "bateriaWh": 220,
+  "voltajeV": 21.6,
+  "pesoKg": 16.4,
+  "cargaMaxKg": 90,
+  "ruedaPulgadas": 8.1,
+  "tipoRueda": "solida",
+  "proteccionIP": "IPX4",
+  "plegable": true,
+  "suspension": "delantera",
+  "frenos": "Electrónico delantero y tambor trasero",
+  "pendienteMaxPct": 12,
+  "tiempoCargaH": 7.5,
+  "categorias": [
+    "urbano",
+    "plegable"
+  ],
+  "fuenteSpecs": "https://store-mx.segway.com/ninebot-kickscooter-e2-plus-ii",
+  "linkAfiliado": "https://meli.la/1wVV3Rf",
+  "tipoVendedor": "oficial",
+  "foto": null,
+  "activo": true
+}
