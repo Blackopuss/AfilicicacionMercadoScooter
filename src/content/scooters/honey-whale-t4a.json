@@ -1,0 +1,28 @@
+{
+  "marca": "Honey Whale",
+  "modelo": "T4A",
+  "autonomiaFabricanteKm": 35,
+  "velocidadMaxKmh": 45,
+  "potenciaW": 600,
+  "potenciaPicoW": 750,
+  "bateriaWh": null,
+  "voltajeV": 48,
+  "pesoKg": 23,
+  "cargaMaxKg": 120,
+  "ruedaPulgadas": 10,
+  "tipoRueda": "tubeless",
+  "proteccionIP": "IPX4",
+  "plegable": true,
+  "suspension": "doble",
+  "frenos": "Disco delantero y trasero",
+  "pendienteMaxPct": 27,
+  "tiempoCargaH": 7,
+  "categorias": [
+    "urbano"
+  ],
+  "fuenteSpecs": "https://honeywhale.com.mx/producto/scooter-electrico-honey-whale-t4-a/",
+  "linkAfiliado": "https://meli.la/2awzmXj",
+  "tipoVendedor": "oficial",
+  "foto": null,
+  "activo": true
+}
