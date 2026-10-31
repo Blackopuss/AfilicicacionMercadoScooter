@@ -1,11 +1,10 @@
 // Proveedor de rutas detrás de una interfaz pequeña: cambiar de Mapbox a otro solo toca este archivo.
 // No es una ruta (no exporta onRequest*): Pages Functions solo enruta los handlers exportados.
-import { enMexico, MEXICO_BBOX, type Punto } from '../../src/lib/mapa';
+import type { Punto } from '../../src/lib/mapa';
 
 export type Env = { MAPBOX_TOKEN?: string };
 export type Contexto = { request: Request; env: Env };
 
-export type Lugar = { nombre: string } & Punto;
 export type Ruta = {
   distanciaKm: number;
   duracionMin: number;
@@ -13,8 +12,8 @@ export type Ruta = {
   desnivelM: number | null;
   geometria: { type: 'LineString'; coordinates: [number, number][] };
 };
+// El buscador de direcciones no pasa por aquí: el navegador consulta Photon directo (docs/mapa.md).
 export interface ProveedorRutas {
-  buscar(texto: string): Promise<Lugar[]>;
   /** null = el proveedor no encontró ruta entre los puntos. */
   ruta(desde: Punto, hasta: Punto): Promise<Ruta | null>;
 }
@@ -31,33 +30,9 @@ async function pedir(url: URL): Promise<unknown> {
   return res.json();
 }
 
-/** Mapbox Directions (perfil cycling, prioriza ciclovías) + Geocoding v6 (temporal). */
+/** Mapbox Directions (perfil cycling, prioriza ciclovías). */
 export function mapbox(token: string): ProveedorRutas {
   return {
-    async buscar(texto) {
-      // La URL se arma solo con valores validados; nunca se usa una URL del usuario.
-      const url = new URL('https://api.mapbox.com/search/geocode/v6/forward');
-      url.search = new URLSearchParams({
-        q: texto,
-        country: 'mx',
-        language: 'es',
-        limit: '5',
-        autocomplete: 'true',
-        bbox: MEXICO_BBOX.join(','),
-        access_token: token,
-      }).toString();
-      const data = (await pedir(url)) as {
-        features?: { properties?: { full_address?: string; name?: string }; geometry?: { coordinates?: number[] } }[];
-      };
-      return (data.features ?? []).flatMap((f) => {
-        const [lon, lat] = f.geometry?.coordinates ?? [];
-        const nombre = f.properties?.full_address ?? f.properties?.name;
-        return typeof lon === 'number' && typeof lat === 'number' && nombre && enMexico({ lon, lat })
-          ? [{ nombre: nombre.slice(0, 200), lon, lat }]
-          : [];
-      });
-    },
-
     async ruta(desde, hasta) {
       const url = new URL(`https://api.mapbox.com/directions/v5/mapbox/cycling/${coord(desde)};${coord(hasta)}`);
       url.search = new URLSearchParams({ geometries: 'geojson', overview: 'full', access_token: token }).toString();
