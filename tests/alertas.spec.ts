@@ -5,9 +5,31 @@ import AxeBuilder from '@axe-core/playwright';
 const salir = (page: Page) =>
   page.evaluate(() => document.dispatchEvent(new MouseEvent('mouseout', { clientY: -1, bubbles: true })));
 
+// Visita con interés (src/lib/popup.ts): 2 minutos en el sitio y 2 fichas vistas. Solo la primera vez por pestaña.
+const conInteres = (page: Page) =>
+  page.addInitScript(() => {
+    if (sessionStorage.getItem('visitaInicio')) return;
+    sessionStorage.setItem('visitaInicio', String(Date.now() - 2 * 60_000));
+    sessionStorage.setItem('fichasVistas', '["segway-e3-pro","segway-max-g3"]');
+  });
+
 test.use({ reducedMotion: 'reduce' });
 
+test('no aparece al entrar aunque el cursor se vaya', async ({ page }) => {
+  await page.goto('/');
+  await salir(page);
+  await page.waitForTimeout(300);
+  await expect(page.locator('dialog[data-alerta-popup][open]')).toHaveCount(0);
+});
+
+test('aparece solo a los 5 minutos de visita', async ({ page }) => {
+  await page.addInitScript(() => sessionStorage.setItem('visitaInicio', String(Date.now() - 5 * 60_000 - 1000)));
+  await page.goto('/');
+  await expect(page.getByRole('dialog', { name: 'Te avisamos cuando baje' })).toBeVisible();
+});
+
 test('el popup de salida aparece una sola vez, se cierra con Esc y devuelve el foco', async ({ page }) => {
+  await conInteres(page);
   await page.goto('/');
   const popup = page.getByRole('dialog', { name: 'Te avisamos cuando baje' });
   await expect(popup).toBeHidden();
@@ -38,6 +60,7 @@ test('el popup de salida aparece una sola vez, se cierra con Esc y devuelve el f
 });
 
 test('el popup se cierra con su botón y con clic fuera', async ({ page }) => {
+  await conInteres(page);
   await page.goto('/');
   await salir(page);
   const popup = page.getByRole('dialog');
@@ -76,6 +99,7 @@ for (const colorScheme of ['light', 'dark'] as const) {
 
 test('en móvil aparece tras scroll profundo', async ({ browser }) => {
   const page = await browser.newPage({ viewport: { width: 375, height: 700 }, hasTouch: true, isMobile: true });
+  await conInteres(page);
   await page.goto('/quiz?d=10&p=75&b=sin&s=0&c=1');
   await page.evaluate(() => scrollTo(0, document.documentElement.scrollHeight));
   await expect(page.getByRole('dialog')).toBeVisible();
