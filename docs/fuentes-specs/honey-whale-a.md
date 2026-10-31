@@ -17,7 +17,7 @@ Criterios comunes:
 
 - `pendienteMaxPct`: Honey Whale publica la pendiente en grados. Se convirtió a porcentaje con `tan(θ) × 100`,
   redondeado: 10° → 18 %, 12° → 21 %, 15° → 27 %, 20° → 36 %, 22° → 40 %. **(derivado)**
-- `bateriaWh`: `null` en todos. Las fuentes dan voltios y amperios-hora, no Wh.
+- `bateriaWh`: calculado como voltios nominales × amperios-hora de la misma fuente (las fuentes no dan Wh), igual que en `iscooter.md`. Los Ah de cada modelo están en su fila `voltajeV`.
 - `tipoRueda`: "Neumáticos de vacío" → `tubeless`; "Neumáticos inflables (con cámara)" → `neumatica`.
 - `potenciaW` es la nominal y `potenciaPicoW` la máxima; en doble motor, la suma de los dos.
 - `categorias`: urbano si la ficha lo plantea para ciudad y pavimento; plegable si además es compacto (≈13 kg);

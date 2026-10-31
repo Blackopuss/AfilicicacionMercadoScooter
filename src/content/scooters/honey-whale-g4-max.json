@@ -5,7 +5,7 @@
   "velocidadMaxKmh": 72,
   "potenciaW": 1600,
   "potenciaPicoW": 2400,
-  "bateriaWh": null,
+  "bateriaWh": 1248,
   "voltajeV": 60,
   "pesoKg": 36,
   "cargaMaxKg": 150,
