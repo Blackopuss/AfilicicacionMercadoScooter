@@ -4,9 +4,9 @@ Comparador de scooters eléctricos para todo México, con historial de precios, 
 A → B, quiz recomendador y guías. Monetiza con el Programa de Afiliados de Mercado Libre
 (10 % venta directa, 5 % indirecta en Deportes y Fitness, tabla vigente desde 02/02/2026).
 
-## Estado (30/10/2026)
+## Estado (31/10/2026)
 
-**Fases 1-8 terminadas y fusionadas en `desarrollo`**, con todas las revisiones del CI en verde. Validación integrada:
+**Fases 1-8 terminadas y publicadas en producción** (https://comparador-scooters-mx.pages.dev), con todas las revisiones del CI en verde. Validación integrada:
 0 errores de tipos, 111 pruebas unitarias, 351 pruebas de UX/accesibilidad y CSP correcto en 157 páginas.
 Falta que el dueño abra el PR `desarrollo` → `main`.
 
@@ -22,30 +22,30 @@ Falta que el dueño abra el PR `desarrollo` → `main`.
 | Alertas de precio y popup de salida | #10 | doble opt-in, Turnstile, Brevo |
 | Guías, A vs B, `/mejores`, sitemap, JSON-LD | #11 | |
 
+### Hecho con el dueño (31/10/2026)
+
+- Web publicada en Cloudflare Pages: https://comparador-scooters-mx.pages.dev (proyecto `comparador-scooters-mx`, rama `main`).
+- Supabase: proyecto `scooters-mx` (https://amtcmshxqulhgifzhnvu.supabase.co), migraciones 0001 y 0002 aplicadas, registro público cerrado, MFA TOTP, admin por `app_metadata.role`. Variables y deploy hook en Pages.
+- Catálogo de México: 26 modelos (Segway, iScooter, Honey Whale) con `linkAfiliado` de meli.la, fotos oficiales (`docs/fotos.md`) y fuentes (`docs/fuentes-specs/`).
+- Buscador de direcciones de `/mapa` con Photon; sin Mapbox la distancia se estima.
+
 ### Pendiente del dueño (no lo puede hacer Claude)
 
-1. **Revisar `desarrollo` y abrir el PR `desarrollo` → `main`.**
-2. **Cuentas y variables**:
-   - Cloudflare Pages: conectar el repo; rama de producción `main`, build `npm run build`, salida `dist`.
-   - Supabase: `docs/supabase.md`.
-   - Brevo + Turnstile: `docs/alertas.md`.
-   - Mapbox: `docs/mapa.md`.
-   - Dominio (Hostinger con nameservers en Cloudflare) y `SITE_URL`.
-   - Seguridad (revisión del 30/10/2026): la regla de rate limiting de `/api/*` (`docs/alertas.md`) solo se puede crear con dominio propio; `*.pages.dev` no admite reglas. Hasta tenerla, no cargar `MAPBOX_TOKEN` ni los secretos de Brevo/Turnstile en Pages: cualquiera podría gastar la cuota de Mapbox o de envíos llamando a la API sin navegador.
-
-   Todas las variables están en `.env.example`.
-3. **Fotos de los modelos** (`src/content/scooters/*.json`, campo `foto`): de prensa del fabricante o propias. El catálogo ya es el de México (Segway, iScooter y Honey Whale de sus tiendas oficiales en Mercado Libre) con su `linkAfiliado`; las fuentes de cada dato están en `docs/fuentes-specs/`.
-4. **Legal** (`docs/legal.md`): llenar los placeholders del aviso de privacidad y que lo revise un abogado antes de captar emails.
-5. **Decisiones**:
-   - Confirmar con Mapbox que sus rutas se pueden usar sobre un mapa MapLibre en un sitio comercial; si no, cambiar el proveedor en `functions/_lib/rutas.ts`. El buscador ya no usa Mapbox (Photon).
-   - Régimen fiscal con un contador.
-6. **Programa de afiliados**: declarar la web y las redes como Medios.
+1. **Capturar precios** en `/admin` y pulsar Publicar. Sin precios no hay historial, bajadas de la semana ni alertas.
+2. **Dominio**: comprarlo, nameservers en Cloudflare, añadirlo como *Custom domain* en Pages, cambiar `SITE_URL` y la *Site URL* y *Redirect URLs* de Supabase. Con el dominio, crear la regla de rate limiting de `/api/*` (`*.pages.dev` no admite reglas).
+3. **Después de la regla de rate limiting** (no antes: sin ella cualquiera gasta la cuota llamando a la API sin navegador):
+   - Mapbox para la ruta por calles (`docs/mapa.md`); confirmar antes su licencia sobre un mapa MapLibre en un sitio comercial.
+   - Brevo + Turnstile para las alertas de precio (`docs/alertas.md`). Brevo también sirve como SMTP de Supabase para que el correo de acceso a `/admin` traiga el código.
+4. **Legal** (`docs/legal.md`): llenar los placeholders del aviso de privacidad y que lo revise un abogado antes de captar emails. Régimen fiscal con un contador.
+5. **Programa de afiliados**: declarar la web y las redes como Medios.
+6. **Al fusionar `desarrollo` → `main`**: usar *Rebase and merge*. Con *merge commit* hay que sincronizar `desarrollo` con un PR `chore/sync-main` antes del siguiente.
 
 ### Siguiente trabajo técnico
 
-- QA final (fase 9): revisión visual hecha el 30/10/2026 (todas las páginas a 375 px y las principales a 1280 px, claro y oscuro). Falta Impeccable / `web-design-guidelines` si se instalan y Strix contra staging.
+- QA final (fase 9): revisión visual hecha el 30/10/2026. Falta Impeccable / `web-design-guidelines` si se instalan y Strix contra staging.
   Ojo: Astro borra el salto de línea entre un texto y la etiqueta o `{variable}` que sigue ("Fuente:" + enlace sale "Fuente:enlace"); poner `{' '}` al final de la línea.
-- Dependabot apunta a `desarrollo` desde este cambio. Los PR viejos hacia `main` (#1 TypeScript 7, #9 @types/node 26) se pueden cerrar: Dependabot los rehace contra `desarrollo`.
+- Datos sin fuente: `potenciaPicoW` en 3 modelos y `proteccionIP` en 2.
+- Cloudflare Web Analytics: al activarlo, añadir sus dominios al CSP (`docs/seguridad.md` §5).
 
 ## Decisiones tomadas
 
