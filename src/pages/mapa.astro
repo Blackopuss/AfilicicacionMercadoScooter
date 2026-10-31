@@ -29,16 +29,37 @@ const campo = 'min-h-12 w-full border-2 border-line bg-surface px-3 text-base te
     <div class="flex min-w-0 flex-col gap-6">
       <form id="form-ruta" class="card flex flex-col gap-4 p-5" novalidate>
         <h2 class="font-display text-2xl uppercase">Tu ruta</h2>
-        <div>
-          <label for="desde" class="label">Desde</label>
-          <input id="desde" name="desde" list="sug-desde" autocomplete="off" maxlength="120" required placeholder="Calle, colonia o lugar" class={`${campo} mt-1`} />
-          <datalist id="sug-desde"></datalist>
-        </div>
-        <div>
-          <label for="hasta" class="label">Hasta</label>
-          <input id="hasta" name="hasta" list="sug-hasta" autocomplete="off" maxlength="120" required placeholder="Calle, colonia o lugar" class={`${campo} mt-1`} />
-          <datalist id="sug-hasta"></datalist>
-        </div>
+        {/* Combobox ARIA 1.2 (input + listbox); el script de abajo llena las sugerencias de Photon. */}
+        {[['desde', 'Desde'], ['hasta', 'Hasta']].map(([id, etiqueta]) => (
+          <div class="relative">
+            <label for={id} class="label">{etiqueta}</label>
+            <input
+              id={id}
+              name={id}
+              type="text"
+              role="combobox"
+              aria-autocomplete="list"
+              aria-expanded="false"
+              aria-controls={`sug-${id}`}
+              autocomplete="off"
+              autocapitalize="off"
+              spellcheck="false"
+              maxlength="120"
+              required
+              placeholder="Calle y número, colonia o lugar"
+              class={`${campo} mt-1`}
+            />
+            <div data-popup hidden class="absolute inset-x-0 top-full z-20 mt-1 border-2 border-line bg-surface shadow-[6px_6px_0_var(--border)]">
+              <p data-estado class="px-3 py-3 text-sm text-muted"></p>
+              <ul id={`sug-${id}`} role="listbox" aria-label={`Sugerencias para ${etiqueta}`} hidden class="max-h-80 overflow-y-auto"></ul>
+            </div>
+          </div>
+        ))}
+        <p id="aviso-sug" class="sr-only" aria-live="polite"></p>
+        <p class="-mt-2 text-xs text-muted">
+          Búsqueda: <a href="https://photon.komoot.io" class="underline">Photon</a> · ©{' '}
+          <a href="https://www.openstreetmap.org/copyright" class="underline">colaboradores de OpenStreetMap</a>
+        </p>
         <button type="submit" class="btn btn-ink"><Icon name="map" class="size-5" />Calcular ruta</button>
         <p id="estado-ruta" class="text-sm text-muted" aria-live="polite"></p>
       </form>
@@ -110,7 +131,7 @@ const campo = 'min-h-12 w-full border-2 border-line bg-surface px-3 text-base te
 
 <script>
   import { autonomiaReal } from '../lib/autonomia';
-  import { alcance, type Punto } from '../lib/mapa';
+  import { alcance, FACTOR_DESVIO, kmEstimados, sugerenciasPhoton, urlPhoton, type Lugar, type Sugerencia } from '../lib/mapa';
   import type { Feature, LineString } from 'geojson';
   import type { GeoJSONSource, Map as Mapa } from 'maplibre-gl';
   import workerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?url';
@@ -129,6 +150,8 @@ const campo = 'min-h-12 w-full border-2 border-line bg-surface px-3 text-base te
   const fmt = (n: number) => n.toLocaleString('es-MX', { maximumFractionDigits: 1 });
 
   let trayectoKm: number | null = null;
+  // true = distancia estimada en línea recta (sin la ruta por calles); el resumen lo dice.
+  let estimado = false;
 
   // Pinta la lista: la alternativa en texto al mapa.
   function pintar() {
@@ -155,7 +178,7 @@ const campo = 'min-h-12 w-full border-2 border-line bg-surface px-3 text-base te
     items.sort((a, b) => b.orden - a.orden).forEach(({ li }) => lista.append(li));
     if (distancia !== null) {
       const llegan = items.filter((i) => i.llega).length;
-      resumen.textContent = `Trayecto de ${fmt(distancia)} km${vuelta.checked ? ' (ida y vuelta)' : ''}: llegan ${llegan} de ${items.length} scooters.`;
+      resumen.textContent = `Trayecto ${estimado ? 'estimado de unos' : 'de'} ${fmt(distancia)} km${vuelta.checked ? ' (ida y vuelta)' : ''}: llegan ${llegan} de ${items.length} scooters.`;
     }
   }
   [peso, subidas, vuelta].forEach((el) => el.addEventListener('input', pintar));
@@ -170,10 +193,11 @@ const campo = 'min-h-12 w-full border-2 border-line bg-surface px-3 text-base te
     }
     estadoKm.textContent = '';
     trayectoKm = v;
+    estimado = false;
     pintar();
   });
 
-  // --- Ruta con la API (functions/api). Si no está disponible, se manda a la gente al cálculo por km. ---
+  // --- Ruta con la API (functions/api). Sin ella (503: no hay token de Mapbox) se estima en línea recta. ---
   class SinServicio extends Error {}
   async function api<T>(ruta: string): Promise<T> {
     let res: Response;
@@ -188,70 +212,186 @@ const campo = 'min-h-12 w-full border-2 border-line bg-surface px-3 text-base te
     return data as T;
   }
 
-  function sinServicio() {
-    estadoRuta.textContent = 'El cálculo de rutas no está disponible ahora. Escribe los km de tu trayecto aquí abajo.';
-    km.focus();
+  // --- Buscador de direcciones: el navegador consulta Photon directo (sin clave; docs/mapa.md). ---
+  const MIN_LETRAS = 3;
+  async function photon(q: string, signal?: AbortSignal): Promise<Sugerencia[]> {
+    const res = await fetch(urlPhoton(q), { signal });
+    if (!res.ok) throw new Error(`Photon ${res.status}`);
+    return sugerenciasPhoton(await res.json());
   }
 
-  type Lugar = Punto & { nombre: string };
-  const lugares = new Map<string, Lugar>();
-  const buscar = async (q: string) => {
-    const { lugares: encontrados } = await api<{ lugares: Lugar[] }>(`/api/geocode?q=${encodeURIComponent(q)}`);
-    encontrados.forEach((l) => lugares.set(l.nombre, l));
-    return encontrados;
-  };
+  const aviso = $('aviso-sug');
+  const elegidos: Record<string, Lugar | null> = {};
 
   for (const id of ['desde', 'hasta']) {
     const input = $<HTMLInputElement>(id);
-    const datalist = $(`sug-${id}`);
-    let espera: ReturnType<typeof setTimeout>;
-    input.addEventListener('input', () => {
+    const popup = input.parentElement!.querySelector<HTMLElement>('[data-popup]')!;
+    const estado = popup.querySelector<HTMLElement>('[data-estado]')!;
+    const listbox = $<HTMLUListElement>(`sug-${id}`);
+    let opciones: Sugerencia[] = [];
+    let activo = -1;
+    let espera: ReturnType<typeof setTimeout> | undefined;
+    let peticion: AbortController | undefined;
+
+    const marcar = (i: number) => {
+      activo = i;
+      [...listbox.children].forEach((li, j) => li.setAttribute('aria-selected', String(j === i)));
+      const li = listbox.children[i];
+      if (li) {
+        input.setAttribute('aria-activedescendant', li.id);
+        li.scrollIntoView({ block: 'nearest' });
+      } else input.removeAttribute('aria-activedescendant');
+    };
+    // Abre la lista de opciones o, con texto, solo el estado ("Buscando…", "Sin resultados").
+    const abrir = (texto?: string) => {
+      marcar(-1);
+      estado.hidden = !texto;
+      estado.textContent = texto ?? '';
+      listbox.hidden = !!texto;
+      popup.hidden = false;
+      input.setAttribute('aria-expanded', String(!texto));
+    };
+    const cerrar = () => {
       clearTimeout(espera);
+      peticion?.abort();
+      popup.hidden = true;
+      input.setAttribute('aria-expanded', 'false');
+      marcar(-1);
+    };
+    const avisar = (texto: string) => {
+      opciones = [];
+      listbox.replaceChildren();
+      abrir(texto);
+      aviso.textContent = texto;
+    };
+    const elegir = (i: number) => {
+      input.value = opciones[i].nombre;
+      elegidos[id] = opciones[i];
+      cerrar();
+    };
+    const mostrar = (lista: Sugerencia[]) => {
+      if (!lista.length) return avisar('Sin resultados. Prueba con calle y colonia, o con el nombre de un lugar.');
+      opciones = lista;
+      listbox.replaceChildren(
+        ...lista.map((s, i) => {
+          const li = document.createElement('li');
+          li.id = `${id}-op-${i}`;
+          li.setAttribute('role', 'option');
+          li.className =
+            'group flex min-h-12 cursor-pointer flex-col justify-center gap-0.5 border-t-2 border-line px-3 py-2 first:border-t-0 aria-selected:bg-accent aria-selected:text-on-accent';
+          const titulo = Object.assign(document.createElement('span'), { textContent: s.titulo });
+          titulo.className = 'font-semibold wrap-break-word';
+          const detalle = Object.assign(document.createElement('span'), { textContent: s.detalle });
+          detalle.className = 'text-sm wrap-break-word text-muted group-aria-selected:text-on-accent';
+          li.append(titulo, ...(s.detalle ? [detalle] : []));
+          return li;
+        }),
+      );
+      abrir();
+      aviso.textContent = `${lista.length} ${lista.length === 1 ? 'sugerencia' : 'sugerencias'}. Usa las flechas para elegir.`;
+    };
+
+    input.addEventListener('input', () => {
+      elegidos[id] = null;
+      clearTimeout(espera);
+      peticion?.abort();
       const q = input.value.trim();
-      if (q.length < 3 || lugares.has(q)) return;
-      // Cada tecla cuenta como una petición en Mapbox: se espera a que la persona deje de escribir.
+      if (q.length < MIN_LETRAS) return cerrar();
+      // Uso justo de Photon: se espera a que la persona deje de escribir y se cancela la petición anterior.
       espera = setTimeout(async () => {
+        peticion = new AbortController();
+        avisar('Buscando…');
         try {
-          const opciones = (await buscar(q)).map((l) => Object.assign(document.createElement('option'), { value: l.nombre }));
-          datalist.replaceChildren(...opciones);
-        } catch {
-          /* las sugerencias son opcionales; el envío del formulario avisa si el servicio falla */
+          mostrar(await photon(q, peticion.signal));
+        } catch (err) {
+          if ((err as Error).name !== 'AbortError') avisar('El buscador no responde. Escribe la dirección completa o tus km abajo.');
         }
-      }, 400);
+      }, 250);
+    });
+
+    input.addEventListener('keydown', (e) => {
+      const conLista = !popup.hidden && !listbox.hidden;
+      if ((e.key === 'ArrowDown' || e.key === 'ArrowUp') && opciones.length) {
+        e.preventDefault();
+        if (!conLista) abrir();
+        const n = opciones.length;
+        const paso = e.key === 'ArrowDown' ? 1 : -1;
+        marcar(activo < 0 ? (paso > 0 ? 0 : n - 1) : (activo + paso + n) % n);
+      } else if (e.key === 'Enter' && conLista && activo >= 0) {
+        e.preventDefault(); // elige la opción en vez de enviar el formulario
+        elegir(activo);
+      } else if (e.key === 'Escape' && !popup.hidden) {
+        e.preventDefault();
+        cerrar();
+      } else if (e.key === 'Tab' && conLista && activo >= 0) {
+        elegir(activo); // sin preventDefault: el foco sigue al siguiente campo
+      }
+    });
+    input.addEventListener('blur', cerrar);
+    // Sin esto, el clic en una opción quita el foco al input y la lista se cierra antes del click.
+    popup.addEventListener('mousedown', (e) => e.preventDefault());
+    listbox.addEventListener('pointermove', (e) => {
+      const li = (e.target as Element).closest('li');
+      if (li && li.getAttribute('aria-selected') !== 'true') marcar([...listbox.children].indexOf(li));
+    });
+    listbox.addEventListener('click', (e) => {
+      const li = (e.target as Element).closest('li');
+      if (li) elegir([...listbox.children].indexOf(li));
     });
   }
 
-  async function resolver(texto: string): Promise<Lugar> {
-    const q = texto.trim();
-    const conocido = lugares.get(q);
-    if (conocido) return conocido;
-    if (q.length < 3) throw new Error('Escribe al menos 3 letras en Desde y Hasta.');
-    const [primero] = await buscar(q);
-    if (!primero) throw new Error(`No encontramos “${q.slice(0, 60)}” en México.`);
-    return primero;
+  // La opción elegida trae sus coordenadas; si la persona escribió sin elegir, se toma la primera sugerencia.
+  async function resolver(id: string): Promise<Lugar> {
+    const elegido = elegidos[id];
+    if (elegido) return elegido;
+    const q = $<HTMLInputElement>(id).value.trim();
+    if (q.length < MIN_LETRAS) throw new Error('Escribe al menos 3 letras en Desde y Hasta.');
+    let encontrados: Sugerencia[];
+    try {
+      encontrados = await photon(q);
+    } catch {
+      throw new Error('El buscador de direcciones no responde ahora. Inténtalo de nuevo o escribe tus km abajo.');
+    }
+    if (!encontrados[0]) throw new Error(`No encontramos “${q.slice(0, 60)}” en México. Prueba con calle y colonia.`);
+    return encontrados[0];
+  }
+
+  function mostrarTrayecto(distanciaKm: number, esEstimado: boolean, texto: string, linea: LineString) {
+    trayectoKm = distanciaKm;
+    estimado = esEstimado;
+    km.value = String(distanciaKm);
+    estadoRuta.textContent = texto;
+    pintar();
+    dibujar(linea, esEstimado).catch(() => {
+      $('mapa-vacio').textContent = 'No pudimos cargar el mapa. El resultado está en la lista de abajo.';
+    });
   }
 
   formRuta.addEventListener('submit', async (e) => {
     e.preventDefault();
-    const boton = formRuta.querySelector('button')!;
+    const boton = formRuta.querySelector<HTMLButtonElement>('button[type=submit]')!;
     boton.disabled = true;
     estadoRuta.textContent = 'Calculando la ruta…';
     try {
-      const desde = await resolver($<HTMLInputElement>('desde').value);
-      const hasta = await resolver($<HTMLInputElement>('hasta').value);
-      const r = await api<{ distanciaKm: number; duracionMin: number; geometria: LineString }>(
-        `/api/ruta?desde=${desde.lon},${desde.lat}&hasta=${hasta.lon},${hasta.lat}`,
-      );
-      trayectoKm = r.distanciaKm;
-      km.value = String(r.distanciaKm);
-      estadoRuta.textContent = `Ruta en bici: ${fmt(r.distanciaKm)} km, unos ${r.duracionMin} min en bici.`;
-      pintar();
-      dibujar(r.geometria).catch(() => {
-        $('mapa-vacio').textContent = 'No pudimos cargar el mapa. El resultado está en la lista de abajo.';
-      });
+      const desde = await resolver('desde');
+      const hasta = await resolver('hasta');
+      try {
+        const r = await api<{ distanciaKm: number; duracionMin: number; geometria: LineString }>(
+          `/api/ruta?desde=${desde.lon},${desde.lat}&hasta=${hasta.lon},${hasta.lat}`,
+        );
+        mostrarTrayecto(r.distanciaKm, false, `Ruta en bici: ${fmt(r.distanciaKm)} km, unos ${r.duracionMin} min en bici.`, r.geometria);
+      } catch (err) {
+        if (!(err instanceof SinServicio)) throw err;
+        const estimadoKm = kmEstimados(desde, hasta);
+        mostrarTrayecto(
+          estimadoKm,
+          true,
+          `Distancia estimada: unos ${fmt(estimadoKm)} km (línea recta × ${FACTOR_DESVIO}, porque no tenemos la ruta por calles). Si sabes tus km exactos, escríbelos abajo.`,
+          { type: 'LineString', coordinates: [[desde.lon, desde.lat], [hasta.lon, hasta.lat]] },
+        );
+      }
     } catch (err) {
-      if (err instanceof SinServicio) sinServicio();
-      else estadoRuta.textContent = (err as Error).message;
+      estadoRuta.textContent = (err as Error).message;
     } finally {
       boton.disabled = false;
     }
@@ -259,7 +399,7 @@ const campo = 'min-h-12 w-full border-2 border-line bg-surface px-3 text-base te
 
   // --- Mapa: MapLibre se descarga solo cuando hay una ruta que dibujar. ---
   let mapa: Mapa | undefined;
-  async function dibujar(linea: LineString) {
+  async function dibujar(linea: LineString, punteada: boolean) {
     if (!mapa) {
       const [ml] = await Promise.all([import('maplibre-gl'), import('maplibre-gl/dist/maplibre-gl.css')]);
       ml.setWorkerUrl(workerUrl);
@@ -294,6 +434,8 @@ const campo = 'min-h-12 w-full border-2 border-line bg-surface px-3 text-base te
         paint: { 'line-color': getComputedStyle(document.documentElement).getPropertyValue('--accent-ink').trim(), 'line-width': 5 },
       });
     }
+    // Punteada = línea recta estimada, no el camino real.
+    mapa.setPaintProperty('ruta', 'line-dasharray', punteada ? [1.5, 2.5] : undefined);
     const [x0, y0] = linea.coordinates[0];
     const caja = linea.coordinates.reduce(
       ([o, s, e, n], [x, y]) => [Math.min(o, x), Math.min(s, y), Math.max(e, x), Math.max(n, y)],

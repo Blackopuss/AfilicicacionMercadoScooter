@@ -30,7 +30,7 @@ Si una petición choca con estas reglas, dilo y pregunta antes de saltártelas.
 | Interactividad | `<script>` de Astro con TypeScript vanilla. **Sin React/Vue/Svelte** salvo acuerdo explícito |
 | Hosting | Cloudflare Pages + Pages Functions (`functions/`). **No Vercel** (su plan gratis no es comercial) |
 | Datos | Specs de scooters en el repo (content collections); precios, historial y alertas en Supabase (Postgres + Auth + RLS) |
-| Mapa | MapLibre GL + OpenFreeMap. Rutas y buscador de direcciones con Mapbox detrás de `functions/_lib/rutas.ts` (licencia por confirmar: `docs/mapa.md`) |
+| Mapa | MapLibre GL + OpenFreeMap. Buscador de direcciones con Photon (OSM, desde el navegador); rutas con Mapbox detrás de `functions/_lib/rutas.ts` (licencia por confirmar: `docs/mapa.md`) |
 | Email | Brevo (+ Cloudflare Turnstile en el formulario) |
 | Pruebas | Vitest (`tests/unit`), Playwright + @axe-core/playwright, comprobación de CSP (`scripts/check-csp.mjs`), Lighthouse CI |
 
@@ -50,7 +50,7 @@ src/
   content/scooters/    modelos de Segway, iScooter y Honey Whale vendidos en México (JSON, esquema en src/content.config.ts; fuentes en docs/fuentes-specs/); foto la pone el dueño
   content/guias/       guías en Markdown
   lib/                 lógica pura en TS: puntuación, autonomía real, percentiles, recomendar, comparar, precios, historial; sin DOM, con pruebas
-functions/api/         Cloudflare Pages Functions: publicar, alertas (alta/confirmar/baja), ruta, geocode (lo único con secretos)
+functions/api/         Cloudflare Pages Functions: publicar, alertas (alta/confirmar/baja), ruta (lo único con secretos)
 functions/_lib/        helpers de las funciones (alertas, proveedor de rutas)
 supabase/migrations/   SQL versionado (0001 tablas + RLS, 0002 avisos de alertas); pgTAP en supabase/tests/
 scripts/check-csp.mjs  verifica que el CSP de public/_headers permita todos los scripts inline del build

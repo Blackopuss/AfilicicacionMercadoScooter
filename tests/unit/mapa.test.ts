@@ -1,7 +1,14 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { onRequest as geocode } from '../../functions/api/geocode';
 import { onRequest as ruta } from '../../functions/api/ruta';
-import { alcance, parsePunto } from '../../src/lib/mapa';
+import {
+  alcance,
+  distanciaRectaKm,
+  FACTOR_DESVIO,
+  kmEstimados,
+  parsePunto,
+  sugerenciasPhoton,
+  urlPhoton,
+} from '../../src/lib/mapa';
 
 describe('alcance', () => {
   it('calcula lo que sobra cuando llega', () => {
@@ -44,17 +51,13 @@ describe('functions/api', () => {
 
   it('sin token responde 503 y no llama al proveedor', async () => {
     const f = fetchFalso({});
-    expect((await geocode({ request: pedir('/api/geocode?q=Reforma'), env: {} })).status).toBe(503);
     expect((await ruta({ request: pedir(`/api/ruta?desde=${CDMX}&hasta=${COYOACAN}`), env: {} })).status).toBe(503);
     expect(f).not.toHaveBeenCalled();
   });
 
   it('entrada inválida → 400', async () => {
     const f = fetchFalso({});
-    for (const q of ['', 'ab', 'x'.repeat(121)]) {
-      expect((await geocode({ request: pedir(`/api/geocode?q=${q}`), env })).status).toBe(400);
-    }
-    expect((await geocode({ request: pedir('/api/geocode?q=Reforma&extra=1'), env })).status).toBe(400);
+    expect((await ruta({ request: pedir(`/api/ruta?desde=${CDMX}&hasta=${COYOACAN}&extra=1`), env })).status).toBe(400);
     expect((await ruta({ request: pedir(`/api/ruta?desde=${CDMX}`), env })).status).toBe(400);
     expect((await ruta({ request: pedir(`/api/ruta?desde=hola&hasta=${CDMX}`), env })).status).toBe(400);
     expect(f).not.toHaveBeenCalled();
@@ -69,27 +72,11 @@ describe('functions/api', () => {
 
   it('método, origen y tamaño', async () => {
     fetchFalso({});
-    expect((await geocode({ request: pedir('/api/geocode?q=Reforma', { method: 'POST' }), env })).status).toBe(405);
-    const ajeno = pedir('/api/geocode?q=Reforma', { headers: { Origin: 'https://otro.com' } });
-    expect((await geocode({ request: ajeno, env })).status).toBe(403);
-    const otroSitio = pedir('/api/geocode?q=Reforma', { headers: { 'Sec-Fetch-Site': 'cross-site' } });
-    expect((await geocode({ request: otroSitio, env })).status).toBe(403);
-    expect((await geocode({ request: pedir(`/api/geocode?q=${'x'.repeat(600)}`), env })).status).toBe(414);
-  });
-
-  it('geocode devuelve solo lugares en México, sin caché', async () => {
-    const f = fetchFalso({
-      features: [
-        { properties: { full_address: 'Reforma, CDMX' }, geometry: { coordinates: [-99.16, 19.43] } },
-        { properties: { full_address: 'Fuera' }, geometry: { coordinates: [-74, 40.7] } },
-      ],
-    });
-    const res = await geocode({ request: pedir('/api/geocode?q=Reforma'), env });
-    expect(await res.json()).toEqual({ lugares: [{ nombre: 'Reforma, CDMX', lon: -99.16, lat: 19.43 }] });
-    expect(res.headers.get('Cache-Control')).toBe('no-store');
-    const url = new URL(String(f.mock.calls[0][0]));
-    expect(url.origin + url.pathname).toBe('https://api.mapbox.com/search/geocode/v6/forward');
-    expect(url.searchParams.get('country')).toBe('mx');
+    const r = `/api/ruta?desde=${CDMX}&hasta=${COYOACAN}`;
+    expect((await ruta({ request: pedir(r, { method: 'POST' }), env })).status).toBe(405);
+    expect((await ruta({ request: pedir(r, { headers: { Origin: 'https://otro.com' } }), env })).status).toBe(403);
+    expect((await ruta({ request: pedir(r, { headers: { 'Sec-Fetch-Site': 'cross-site' } }), env })).status).toBe(403);
+    expect((await ruta({ request: pedir(`${r}${'0'.repeat(600)}`), env })).status).toBe(414);
   });
 
   it('ruta devuelve km, minutos y geometría', async () => {
@@ -112,5 +99,82 @@ describe('functions/api', () => {
     const res = await ruta({ request: pedir(`/api/ruta?desde=${CDMX}&hasta=${COYOACAN}`), env });
     expect(res.status).toBe(502);
     expect(JSON.stringify(await res.json())).not.toContain('Token');
+  });
+});
+
+describe('sugerenciasPhoton', () => {
+  const punto = (lon: number, lat: number) => ({ type: 'Point', coordinates: [lon, lat] });
+  it('arma el nombre en el orden de México y sin repetir la ciudad', () => {
+    const data = {
+      features: [
+        {
+          geometry: punto(-99.1815881, 19.3639017),
+          properties: {
+            name: 'CitiCenter',
+            street: 'Avenida Insurgentes Sur',
+            housenumber: '1602',
+            locality: 'Colonia Crédito Constructor',
+            district: 'Benito Juárez',
+            city: 'Ciudad de México',
+            state: 'Ciudad de México',
+            countrycode: 'MX',
+          },
+        },
+        { geometry: punto(-99.16, 19.35), properties: { street: 'Calle Allende', housenumber: '5', district: 'Coyoacán', state: 'Ciudad de México', countrycode: 'MX' } },
+      ],
+    };
+    expect(sugerenciasPhoton(data)).toEqual([
+      {
+        titulo: 'CitiCenter',
+        detalle: 'Avenida Insurgentes Sur 1602, Colonia Crédito Constructor, Ciudad de México',
+        nombre: 'CitiCenter, Avenida Insurgentes Sur 1602, Colonia Crédito Constructor, Ciudad de México',
+        lon: -99.1815881,
+        lat: 19.3639017,
+      },
+      {
+        titulo: 'Calle Allende 5',
+        detalle: 'Coyoacán, Ciudad de México',
+        nombre: 'Calle Allende 5, Coyoacán, Ciudad de México',
+        lon: -99.16,
+        lat: 19.35,
+      },
+    ]);
+  });
+  it('descarta lo que cae fuera de México, sin nombre, repetido o mal formado', () => {
+    const cdmx = { geometry: punto(-99.13, 19.43), properties: { name: 'Zócalo', countrycode: 'MX' } };
+    const data = {
+      features: [
+        { geometry: punto(-74, 40.7), properties: { name: 'Nueva York' } },
+        { geometry: punto(-90.51, 14.64), properties: { name: 'Ciudad de Guatemala', countrycode: 'GT' } },
+        { geometry: punto(-99.1, 19.4), properties: {} },
+        { geometry: { coordinates: ['-99', '19'] }, properties: { name: 'Texto' } },
+        null,
+        cdmx,
+        cdmx,
+      ],
+    };
+    expect(sugerenciasPhoton(data).map((s) => s.nombre)).toEqual(['Zócalo']);
+    for (const raro of [null, 'hola', {}, { features: 'x' }]) expect(sugerenciasPhoton(raro)).toEqual([]);
+  });
+  it('urlPhoton pide 5 resultados dentro de México y escapa el texto', () => {
+    const url = new URL(urlPhoton('Reforma 222 & Juárez'));
+    expect(url.origin + url.pathname).toBe('https://photon.komoot.io/api/');
+    expect(url.searchParams.get('q')).toBe('Reforma 222 & Juárez');
+    expect(url.searchParams.get('limit')).toBe('5');
+    expect(url.searchParams.get('bbox')).toBe('-118.6,14.4,-86.5,32.8');
+  });
+});
+
+describe('distancia estimada', () => {
+  const zocalo = { lon: -99.1332, lat: 19.4326 };
+  const coyoacan = { lon: -99.1625, lat: 19.3467 };
+  it('haversine da la línea recta', () => {
+    expect(distanciaRectaKm(zocalo, zocalo)).toBe(0);
+    expect(distanciaRectaKm(zocalo, coyoacan)).toBeCloseTo(10.0, 0);
+    // CDMX → Guadalajara: unos 460 km en línea recta.
+    expect(distanciaRectaKm(zocalo, { lon: -103.3496, lat: 20.6597 })).toBeCloseTo(461, -1);
+  });
+  it('los km estimados son la recta × el factor de desvío, con un decimal', () => {
+    expect(kmEstimados(zocalo, coyoacan)).toBe(Math.round(distanciaRectaKm(zocalo, coyoacan) * FACTOR_DESVIO * 10) / 10);
   });
 });
